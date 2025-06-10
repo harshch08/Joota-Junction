@@ -3,16 +3,20 @@ import { Filter, Search } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import Header from '../components/Header';
 import ProductCard from '../components/ProductCard';
-import CategoryCard from '../components/CategoryCard';
+import BrandCard from '../components/BrandCard';
 import SearchResults from '../components/SearchResults';
 import ProductModal from '../components/ProductModal';
 import FilterSidebar from '../components/FilterSidebar';
 import AuthModal from '../components/AuthModal';
-import { productsAPI, categoriesAPI } from '../services/api';
-import { Product, Category } from '../types';
+import { productsAPI, brandsAPI } from '../services/api';
+import { Product, Brand } from '../types';
 import FeaturedProductCard from '../components/FeaturedProductCard';
 import AboutUs from '../components/AboutUs';
 import Footer from '../components/Footer';
+import Banner from '../components/Banner';
+import BrandSlider from '../components/BrandSlider';
+import ScrollSection from '../components/ScrollSection';
+import NewArrivals from '../components/NewArrivals';
 
 const priceRanges = [
   { label: 'Under ₹2,000', min: 0, max: 2000 },
@@ -65,10 +69,16 @@ const Index = () => {
     enabled: isSearching && !!currentSearchQuery // Only fetch search results when searching
   });
 
-  const { data: categories = [], isLoading: categoriesLoading } = useQuery<Category[]>({
-    queryKey: ['categories'],
-    queryFn: () => categoriesAPI.getAllCategories()
+  const { data: brands = [], isLoading: brandsLoading } = useQuery<Brand[]>({
+    queryKey: ['brands'],
+    queryFn: () => brandsAPI.getAllBrands()
   });
+
+  // Filter brands to show only specific ones
+  const filteredBrands = useMemo(() => {
+    const targetBrands = ['Nike', 'Puma', 'Adidas', 'New Balance'];
+    return brands.filter(brand => targetBrands.includes(brand.name));
+  }, [brands]);
 
   const featuredProducts = products.filter(product => product.featured);
 
@@ -179,148 +189,113 @@ const Index = () => {
         selectedCategory={selectedCategory}
       />
 
-      {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-blue-600 via-blue-700 to-purple-700 text-white overflow-hidden">
-        <div className="absolute inset-0 bg-black opacity-10"></div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24">
-          <div className="text-center">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6">
-              Step Into <span className="text-yellow-300">Style</span>
-            </h1>
-            <p className="text-lg sm:text-xl md:text-2xl mb-6 sm:mb-8 text-blue-100 max-w-3xl mx-auto">
-              Discover the perfect shoes for every occasion at JOOTA JUNCTION, from casual comfort to athletic performance
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <button 
-                onClick={() => document.getElementById('featured-section')?.scrollIntoView({ behavior: 'smooth' })}
-                className="bg-white text-blue-600 px-6 sm:px-8 py-3 sm:py-4 rounded-full font-semibold text-base sm:text-lg hover:bg-gray-100 transition-all duration-200 transform hover:scale-105 shadow-lg"
-              >
-                Shop Featured
-              </button>
-              <button 
-                onClick={() => document.getElementById('all-products')?.scrollIntoView({ behavior: 'smooth' })}
-                className="border-2 border-white text-white px-6 sm:px-8 py-3 sm:py-4 rounded-full font-semibold text-base sm:text-lg hover:bg-white hover:text-blue-600 transition-all duration-200"
-              >
-                View All Products
-              </button>
-            </div>
+      {/* Banner Section */}
+      <Banner />
+
+      {/* Shop by Brand Section */}
+      <ScrollSection className="py-20 bg-gradient-to-b from-white to-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4 relative inline-block">
+              Shop by Brand
+              <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full"></div>
+            </h2>
+            <p className="text-gray-600 mt-4 max-w-2xl mx-auto text-lg">Discover our curated collection of premium brands, each bringing their unique style and quality to your wardrobe.</p>
           </div>
-        </div>
-        <div className="absolute bottom-0 left-0 right-0 h-16 sm:h-20 bg-gradient-to-t from-gray-50 to-transparent"></div>
-      </section>
-
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Featured Products */}
-        <section id="featured-section" className="mb-12">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-            <span className="inline-block w-2 h-8 bg-gradient-to-b from-blue-500 to-purple-500 rounded-full mr-2"></span>
-            Featured Products
-          </h2>
-          <div 
-            ref={scrollContainerRef}
-            className="overflow-x-auto pb-2 -mx-2 scrollbar-hide"
-            style={{scrollSnapType: 'x mandatory'}}
-          >
-            <div className="flex gap-6 px-2" style={{scrollSnapType: 'x mandatory'}}>
-              {featuredProducts.slice(0, 3).map((product, index) => (
-                <div 
-                  key={product._id} 
-                  className="min-w-[320px] max-w-xs flex-shrink-0" 
-                  style={{scrollSnapAlign: 'start'}}
-                >
-                  <FeaturedProductCard
-                    product={product}
-                    onProductClick={() => setSelectedProduct(product)}
-                    onAuthRequired={() => setShowAuthModal(true)}
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-          
-          {/* Slide indicators for mobile */}
-          {isMobile && featuredProducts.length > 1 && (
-            <div className="flex justify-center mt-4 space-x-2">
-              {featuredProducts.slice(0, 3).map((_, index) => (
-                <button
-                  key={index}
-                  className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                    index === currentSlide 
-                      ? 'bg-blue-600 w-6' 
-                      : 'bg-gray-300'
-                  }`}
-                  onClick={() => {
-                    setCurrentSlide(index);
-                    if (scrollContainerRef.current) {
-                      const container = scrollContainerRef.current;
-                      const slideWidth = container.children[0]?.clientWidth || 320;
-                      const gap = 24;
-                      const scrollPosition = index * (slideWidth + gap);
-                      
-                      container.scrollTo({
-                        left: scrollPosition,
-                        behavior: 'smooth'
-                      });
-                    }
-                  }}
-                />
-              ))}
-            </div>
-          )}
-        </section>
-
-        {/* Categories Section */}
-        <section className="mb-12">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Shop by Category</h2>
-          {categoriesLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-              <span className="ml-2 text-gray-600">Loading categories...</span>
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3 sm:gap-4">
-              {categories.map((category) => (
-                <CategoryCard
-                  key={category._id}
-                  category={category}
-                />
-              ))}
-            </div>
-          )}
-        </section>
-
-        {/* All Products */}
-        <section id="all-products">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">All Products</h2>
-            <button
-              onClick={() => setShowFilters(true)}
-              className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 transition-colors"
-            >
-              <Filter className="h-5 w-5" />
-              <span>Filters</span>
-            </button>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {products.map((product) => (
-              <ProductCard
-                key={product._id}
-                product={product}
-                onProductClick={() => setSelectedProduct(product)}
-                onAuthRequired={() => setShowAuthModal(true)}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+            {filteredBrands.map((brand) => (
+              <BrandCard
+                key={brand._id}
+                brand={brand}
               />
             ))}
           </div>
+        </div>
+      </ScrollSection>
 
-          {products.length === 0 && (
-            <div className="text-center py-12">
-              <p className="text-gray-500">No products found matching your search criteria.</p>
+      {/* Featured Products Section */}
+      <ScrollSection id="featured-section" className="py-16 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4 relative inline-block">
+              Featured Products
+              <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-orange-500 to-yellow-500 rounded-full"></div>
+            </h2>
+            <p className="text-gray-600 mt-4 max-w-2xl mx-auto">Explore our handpicked selection of trending styles and must-have pieces for your collection.</p>
+          </div>
+          <div 
+            ref={scrollContainerRef}
+            className="flex overflow-x-auto gap-6 pb-4 scrollbar-hide"
+          >
+            {featuredProducts.map((product) => (
+              <div key={product._id} className="flex-shrink-0 w-[280px]">
+                <FeaturedProductCard
+                  product={product}
+                  onProductClick={setSelectedProduct}
+                  onAuthRequired={() => setShowAuthModal(true)}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      </ScrollSection>
+
+      {/* Brand Slider Section */}
+      <ScrollSection id="brand-slider" className="py-12 bg-gray-50">
+        <BrandSlider />
+      </ScrollSection>
+
+      <ScrollSection id="new-arrivals" className="py-12 bg-white">
+        <NewArrivals 
+          onProductClick={setSelectedProduct}
+          onAuthRequired={() => setShowAuthModal(true)}
+        />
+      </ScrollSection>
+
+      {/* Main Content */}
+      <ScrollSection className="py-16 bg-gray-50" threshold={0.05}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* All Products */}
+          <section id="all-products">
+            <div className="text-center mb-12">
+              <h2 className="text-4xl font-bold text-gray-900 mb-4 relative inline-block">
+                All Products
+                <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full"></div>
+              </h2>
+              <p className="text-gray-600 mt-4 max-w-2xl mx-auto">Browse our complete collection of premium footwear, from classic styles to the latest trends.</p>
             </div>
-          )}
-        </section>
-      </main>
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center space-x-4">
+                <span className="text-sm text-gray-600">Showing {products.length} products</span>
+              </div>
+              <button
+                onClick={() => setShowFilters(true)}
+                className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 transition-colors bg-white px-4 py-2 rounded-lg border border-gray-200 hover:border-blue-600"
+              >
+                <Filter className="h-5 w-5" />
+                <span>Filters</span>
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {products.map((product) => (
+                <ProductCard
+                  key={product._id}
+                  product={product}
+                  onProductClick={() => setSelectedProduct(product)}
+                  onAuthRequired={() => setShowAuthModal(true)}
+                />
+              ))}
+            </div>
+
+            {products.length === 0 && (
+              <div className="text-center py-12">
+                <p className="text-gray-500">No products found matching your search criteria.</p>
+              </div>
+            )}
+          </section>
+        </div>
+      </ScrollSection>
 
       <FilterSidebar
         isOpen={showFilters}
