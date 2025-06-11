@@ -7,7 +7,6 @@ import FilterSidebar from '../components/FilterSidebar';
 import AuthModal from '../components/AuthModal';
 import ProductModal from '../components/ProductModal';
 import { Product } from '../types';
-import Header from '../components/Header';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage } from '../components/ui/breadcrumb';
 import { ChevronRight, Home } from 'lucide-react';
 
@@ -29,6 +28,11 @@ const CategoryPage = () => {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Scroll to top when component mounts or category changes
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [category]);
 
   // Update selectedCategory when URL parameter changes
   useEffect(() => {
@@ -98,12 +102,6 @@ const CategoryPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header
-        onSearch={setSearchQuery}
-        onCategorySelect={setSelectedCategory}
-        selectedCategory={selectedCategory}
-      />
-
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb Navigation */}
         <Breadcrumb className="mb-8">

@@ -3,6 +3,7 @@ const router = express.Router();
 const Product = require('../models/Product');
 const { protect } = require('../middleware/auth');
 const mongoose = require('mongoose');
+const Brand = require('../models/Brand');
 
 // Debug middleware
 router.use((req, res, next) => {
@@ -35,7 +36,7 @@ router.get('/', async (req, res) => {
     console.log('Request headers:', req.headers);
     console.log('Request query:', req.query);
     
-    const { category, brand, minPrice, maxPrice, search } = req.query;
+    const { category, brand, brandId, minPrice, maxPrice, search } = req.query;
     let query = {};
 
     // Apply filters
@@ -44,6 +45,13 @@ router.get('/', async (req, res) => {
     }
     if (brand) {
       query.brand = brand;
+    }
+    if (brandId) {
+      // First get the brand name from the brand ID
+      const brandDoc = await Brand.findById(brandId);
+      if (brandDoc) {
+        query.brand = brandDoc.name;
+      }
     }
     if (minPrice || maxPrice) {
       query.price = {};

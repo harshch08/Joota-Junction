@@ -128,7 +128,7 @@ const productRoutes = require('./routes/products');
 const orderRoutes = require('./routes/orders');
 const adminRoutes = require('./routes/admin');
 const categoryRoutes = require('./routes/categories');
-const emailVerificationRoutes = require('./routes/emailVerification');
+const brandRoutes = require('./routes/brands');
 
 // Mount routes
 app.use('/api/auth', authRoutes);
@@ -136,7 +136,7 @@ app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/categories', categoryRoutes);
-app.use('/api/email-verification', emailVerificationRoutes);
+app.use('/api/brands', brandRoutes);
 
 // Basic route for testing
 app.get('/api/test', (req, res) => {

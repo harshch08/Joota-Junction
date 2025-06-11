@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, CreditCard, Truck, Shield, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useCart } from '../contexts/CartContext';
-import { useAuth } from '../contexts/AuthContext';
+import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 import { formatCurrency } from '../lib/utils';
 import { ordersAPI } from '../services/api';
 
@@ -144,7 +144,7 @@ const Checkout = () => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        
+
         // Handle stock validation errors
         if (errorData.stockErrors) {
           const stockErrorMessages = errorData.stockErrors.map((error: any) => 

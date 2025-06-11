@@ -1,7 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { Filter, Search } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import Header from '../components/Header';
 import ProductCard from '../components/ProductCard';
 import BrandCard from '../components/BrandCard';
 import SearchResults from '../components/SearchResults';
@@ -12,7 +11,6 @@ import { productsAPI, brandsAPI } from '../services/api';
 import { Product, Brand } from '../types';
 import FeaturedProductCard from '../components/FeaturedProductCard';
 import AboutUs from '../components/AboutUs';
-import Footer from '../components/Footer';
 import Banner from '../components/Banner';
 import BrandSlider from '../components/BrandSlider';
 import ScrollSection from '../components/ScrollSection';
@@ -72,7 +70,7 @@ const Index = () => {
   const { data: brands = [], isLoading: brandsLoading } = useQuery<Brand[]>({
     queryKey: ['brands'],
     queryFn: () => brandsAPI.getAllBrands()
-  });
+    });
 
   // Filter brands to show only specific ones
   const filteredBrands = useMemo(() => {
@@ -142,11 +140,6 @@ const Index = () => {
   if (isSearching) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Header
-          onSearch={handleSearch}
-          onCategorySelect={setSelectedCategory}
-          selectedCategory={selectedCategory}
-        />
         <SearchResults
           searchQuery={currentSearchQuery}
           products={searchResults}
@@ -182,25 +175,19 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header
-        onSearch={handleSearch}
-        onCategorySelect={setSelectedCategory}
-        selectedCategory={selectedCategory}
-      />
-
+    <div className="bg-gray-50">
       {/* Banner Section */}
       <Banner />
 
       {/* Shop by Brand Section */}
-      <ScrollSection className="py-20 bg-gradient-to-b from-white to-gray-50">
+      <ScrollSection className="py-12 md:py-20 bg-gradient-to-b from-white to-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4 relative inline-block">
+          <div className="text-center mb-8 md:mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 relative inline-block">
               Shop by Brand
               <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full"></div>
             </h2>
-            <p className="text-gray-600 mt-4 max-w-2xl mx-auto text-lg">Discover our curated collection of premium brands, each bringing their unique style and quality to your wardrobe.</p>
+            <p className="text-gray-600 mt-4 max-w-2xl mx-auto text-base md:text-lg">Discover our curated collection of premium brands, each bringing their unique style and quality to your wardrobe.</p>
           </div>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
             {filteredBrands.map((brand) => (
@@ -214,14 +201,14 @@ const Index = () => {
       </ScrollSection>
 
       {/* Featured Products Section */}
-      <ScrollSection id="featured-section" className="py-16 bg-gray-50">
+      <ScrollSection id="featured-section" className="py-12 md:py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4 relative inline-block">
+          <div className="text-center mb-8 md:mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 relative inline-block">
               Featured Products
               <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-orange-500 to-yellow-500 rounded-full"></div>
             </h2>
-            <p className="text-gray-600 mt-4 max-w-2xl mx-auto">Explore our handpicked selection of trending styles and must-have pieces for your collection.</p>
+            <p className="text-gray-600 mt-4 max-w-2xl mx-auto text-base md:text-lg">Explore our handpicked selection of trending styles and must-have pieces for your collection.</p>
           </div>
           <div 
             ref={scrollContainerRef}
@@ -242,7 +229,7 @@ const Index = () => {
 
       {/* Brand Slider Section */}
       <ScrollSection id="brand-slider" className="py-12 bg-gray-50">
-        <BrandSlider />
+      <BrandSlider />
       </ScrollSection>
 
       <ScrollSection id="new-arrivals" className="py-12 bg-white">
@@ -253,47 +240,47 @@ const Index = () => {
       </ScrollSection>
 
       {/* Main Content */}
-      <ScrollSection className="py-16 bg-gray-50" threshold={0.05}>
+      <ScrollSection className="py-12 md:py-16 bg-gray-50" threshold={0.05}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* All Products */}
-          <section id="all-products">
-            <div className="text-center mb-12">
-              <h2 className="text-4xl font-bold text-gray-900 mb-4 relative inline-block">
-                All Products
-                <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full"></div>
-              </h2>
-              <p className="text-gray-600 mt-4 max-w-2xl mx-auto">Browse our complete collection of premium footwear, from classic styles to the latest trends.</p>
+        {/* All Products */}
+        <section id="all-products">
+          <div className="text-center mb-8 md:mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 relative inline-block">
+              All Products
+              <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full"></div>
+            </h2>
+            <p className="text-gray-600 mt-4 max-w-2xl mx-auto text-base md:text-lg">Browse our complete collection of premium footwear, from classic styles to the latest trends.</p>
+          </div>
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center space-x-4">
+              <span className="text-sm text-gray-600">Showing {products.length} products</span>
             </div>
-            <div className="flex items-center justify-between mb-8">
-              <div className="flex items-center space-x-4">
-                <span className="text-sm text-gray-600">Showing {products.length} products</span>
-              </div>
-              <button
-                onClick={() => setShowFilters(true)}
-                className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 transition-colors bg-white px-4 py-2 rounded-lg border border-gray-200 hover:border-blue-600"
-              >
-                <Filter className="h-5 w-5" />
-                <span>Filters</span>
-              </button>
-            </div>
+            <button
+              onClick={() => setShowFilters(true)}
+              className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 transition-colors bg-white px-4 py-2 rounded-lg border border-gray-200 hover:border-blue-600"
+            >
+              <Filter className="h-5 w-5" />
+              <span>Filters</span>
+            </button>
+          </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {products.map((product) => (
-                <ProductCard
-                  key={product._id}
-                  product={product}
-                  onProductClick={() => setSelectedProduct(product)}
-                  onAuthRequired={() => setShowAuthModal(true)}
-                />
-              ))}
-            </div>
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {products.map((product) => (
+              <ProductCard
+                key={product._id}
+                product={product}
+                onProductClick={() => setSelectedProduct(product)}
+                onAuthRequired={() => setShowAuthModal(true)}
+              />
+            ))}
+          </div>
 
-            {products.length === 0 && (
-              <div className="text-center py-12">
-                <p className="text-gray-500">No products found matching your search criteria.</p>
-              </div>
-            )}
-          </section>
+          {products.length === 0 && (
+            <div className="text-center py-12">
+              <p className="text-gray-500">No products found matching your search criteria.</p>
+            </div>
+          )}
+        </section>
         </div>
       </ScrollSection>
 
@@ -322,8 +309,6 @@ const Index = () => {
 
       {/* About Us Section */}
       <AboutUs />
-      {/* Footer Section */}
-      <Footer />
     </div>
   );
 };

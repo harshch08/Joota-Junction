@@ -18,13 +18,26 @@ export interface Product {
   featured?: boolean;
   createdAt?: string;
   __v?: number;
-}
+} 
 
 export interface Category {
   _id: string;
   name: string;
+  slug: string;
   description: string;
   image?: string;
+  isActive?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface Brand {
+  _id: string;
+  name: string;
+  slug: string;
+  description: string;
+  logo?: string;
+  bgColor?: string; // Deprecated: No longer used for logo display
   isActive?: boolean;
   createdAt?: string;
   updatedAt?: string;

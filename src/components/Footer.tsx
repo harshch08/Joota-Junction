@@ -31,7 +31,11 @@ interface StoreSettings {
   };
 }
 
-const Footer: React.FC = () => {
+interface FooterProps {
+  className?: string;
+}
+
+const Footer: React.FC<FooterProps> = ({ className = '' }) => {
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [storeSettings, setStoreSettings] = useState<StoreSettings | null>(null);
   const [loading, setLoading] = useState(true);
@@ -94,7 +98,7 @@ const Footer: React.FC = () => {
 
   if (loading) {
     return (
-      <footer className="w-full bg-gradient-to-r from-gray-900 to-gray-800 text-white py-12 px-4 mt-0 relative">
+      <footer className={`w-full bg-gray-900 text-white py-12 px-4 ${className}`}>
         <div className="max-w-7xl mx-auto flex items-center justify-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
           <span className="ml-2">Loading...</span>
@@ -108,73 +112,88 @@ const Footer: React.FC = () => {
   const primaryAddress = storeSettings?.addresses[0];
 
   return (
-    <footer className="w-full bg-gradient-to-r from-gray-900 to-gray-800 text-white py-12 px-4 mt-0 relative">
-      <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
-        {/* Brand & Social */}
-        <div className="flex flex-col items-center md:items-start gap-4">
-          <span className="text-2xl font-extrabold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
-            {storeSettings?.storeName || 'JOOTA JUNCTION'}
-          </span>
-          <div className="flex gap-4 mt-2">
-            <a 
-              href={storeSettings?.socialMedia?.instagram || "https://instagram.com/jootajunction"}
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="p-2 rounded-full bg-gray-700 hover:bg-pink-500 hover:scale-110 transition-all duration-300 group"
-            >
-              <Instagram size={20} className="group-hover:text-white" />
-            </a>
-            <a 
-              href={storeSettings?.socialMedia?.facebook || "https://facebook.com/jootajunction"}
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="p-2 rounded-full bg-gray-700 hover:bg-blue-600 hover:scale-110 transition-all duration-300 group"
-            >
-              <Facebook size={20} className="group-hover:text-white" />
-            </a>
-            <a 
-              href={storeSettings?.socialMedia?.twitter || "https://twitter.com/jootajunction"}
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="p-2 rounded-full bg-gray-700 hover:bg-sky-500 hover:scale-110 transition-all duration-300 group"
-            >
-              <Twitter size={20} className="group-hover:text-white" />
-            </a>
-            <a 
-              href={`mailto:${primaryEmail}`}
-              className="p-2 rounded-full bg-gray-700 hover:bg-rose-500 hover:scale-110 transition-all duration-300 group"
-            >
-              <Mail size={20} className="group-hover:text-white" />
-            </a>
+    <footer className={`w-full bg-gray-900 text-white py-16 px-4 ${className}`}>
+      <div className="max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-12">
+          {/* Brand & Social */}
+          <div className="flex flex-col items-center md:items-start gap-6">
+            <span className="text-3xl font-black tracking-tight">
+              {storeSettings?.storeName || 'JOOTA JUNCTION'}
+            </span>
+            <p className="text-gray-400 text-sm max-w-md text-center md:text-left">
+              Your premier destination for stylish and comfortable footwear. We bring you the best in modern, comfortable, and affordable shoes for every walk of life.
+            </p>
+            <div className="flex gap-4 mt-2">
+              <a 
+                href={storeSettings?.socialMedia?.instagram || "https://instagram.com/jootajunction"}
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="p-3 rounded-full bg-gray-800 hover:bg-white hover:text-gray-900 transition-all duration-300 group"
+              >
+                <Instagram size={20} />
+              </a>
+              <a 
+                href={storeSettings?.socialMedia?.facebook || "https://facebook.com/jootajunction"}
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="p-3 rounded-full bg-gray-800 hover:bg-white hover:text-gray-900 transition-all duration-300 group"
+              >
+                <Facebook size={20} />
+              </a>
+              <a 
+                href={storeSettings?.socialMedia?.twitter || "https://twitter.com/jootajunction"}
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="p-3 rounded-full bg-gray-800 hover:bg-white hover:text-gray-900 transition-all duration-300 group"
+              >
+                <Twitter size={20} />
+              </a>
+              <a 
+                href={`mailto:${primaryEmail}`}
+                className="p-3 rounded-full bg-gray-800 hover:bg-white hover:text-gray-900 transition-all duration-300 group"
+              >
+                <Mail size={20} />
+              </a>
+            </div>
+          </div>
+          
+          {/* Contact Info */}
+          <div className="flex flex-col items-center md:items-end gap-6">
+            <div className="text-center md:text-right">
+              <h3 className="text-xl font-bold mb-4">Contact Us</h3>
+              <div className="flex flex-col gap-4">
+                <div className="flex items-center gap-3 text-gray-300 hover:text-white transition-colors">
+                  <Mail size={18} className="text-gray-400" />
+                  <span className="text-sm">{primaryEmail}</span>
+                </div>
+                <div className="flex items-center gap-3 text-gray-300 hover:text-white transition-colors">
+                  <Phone size={18} className="text-gray-400" />
+                  <span className="text-sm">{primaryPhone}</span>
+                </div>
+                {primaryAddress && (
+                  <div className="flex items-center gap-3 text-gray-300 hover:text-white transition-colors">
+                    <MapPin size={18} className="text-gray-400" />
+                    <span className="text-sm">{primaryAddress.street}, {primaryAddress.city}</span>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
         
-        {/* Contact Info */}
-        <div className="flex flex-col items-center md:items-end gap-4">
-          <span className="font-semibold text-lg mb-2 text-blue-300">Contact</span>
-          <div className="flex flex-col gap-3">
-            <div className="flex items-center gap-2 text-gray-300 text-sm hover:text-white transition-colors">
-              <Mail size={16} className="text-blue-400" />
-              <span>{primaryEmail}</span>
-            </div>
-            <div className="flex items-center gap-2 text-gray-300 text-sm hover:text-white transition-colors">
-              <Phone size={16} className="text-green-400" />
-              <span>{primaryPhone}</span>
-            </div>
-            {primaryAddress && (
-              <div className="flex items-center gap-2 text-gray-300 text-sm hover:text-white transition-colors">
-                <MapPin size={16} className="text-red-400" />
-                <span>{primaryAddress.street}, {primaryAddress.city}</span>
-              </div>
-            )}
-          </div>
+        {/* Divider */}
+        <div className="h-px bg-gray-800 w-full mb-8"></div>
+        
+        {/* Copyright */}
+        <div className="text-center text-sm text-gray-400">
+          &copy; {new Date().getFullYear()} {storeSettings?.storeName || 'JOOTA JUNCTION'}. All rights reserved.
         </div>
       </div>
       
       {/* Go to Top Button */}
       <button
         onClick={scrollToTop}
-        className={`fixed bottom-6 right-6 p-3 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-300 group z-50 ${
+        className={`fixed bottom-20 md:bottom-6 right-6 p-3 rounded-full bg-white hover:bg-gray-100 text-gray-900 shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-300 group z-50 ${
           showScrollTop 
             ? 'opacity-100 translate-y-0' 
             : 'opacity-0 translate-y-10 pointer-events-none'
@@ -183,10 +202,6 @@ const Footer: React.FC = () => {
       >
         <ArrowUp size={24} className="group-hover:-translate-y-1 transition-transform" />
       </button>
-      
-      <div className="mt-10 text-center text-xs text-gray-400 border-t border-gray-700 pt-6">
-        &copy; {new Date().getFullYear()} {storeSettings?.storeName || 'JOOTA JUNCTION'}. All rights reserved.
-      </div>
     </footer>
   );
 };

@@ -1,15 +1,11 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { authAPI, emailVerificationAPI } from '../services/api';
 
 interface User {
-  id: string;
+  _id: string;
   name: string;
   email: string;
-  role: string;
-  avatar: string;
-  cart: any[];
-  emailVerified?: boolean;
+  role: 'user' | 'admin';
 }
 
 interface AuthContextType {
@@ -18,9 +14,6 @@ interface AuthContextType {
   error: string | null;
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
-  sendOTP: (email: string, name?: string) => Promise<void>;
-  verifyOTP: (email: string, otp: string, name: string, password: string) => Promise<void>;
-  resendOTP: (email: string, name?: string) => Promise<void>;
   logout: () => void;
   clearAllAuth: () => void;
 }
@@ -38,8 +31,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         const token = localStorage.getItem('token');
         if (token) {
-          const userData = await authAPI.getProfile();
-          setUser(userData);
+          const response = await fetch('http://localhost:5001/api/auth/profile', {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+            },
+          });
+          
+          if (response.ok) {
+            const userData = await response.json();
+            setUser(userData);
+            
+            // If user is admin, set admin data
+            if (userData.role === 'admin') {
+              localStorage.setItem('adminToken', token);
+              localStorage.setItem('adminUser', JSON.stringify(userData));
+            }
+          }
         }
       } catch (error) {
         console.error('Error initializing auth:', error);
@@ -55,26 +62,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password: string) => {
     try {
       setError(null);
-      const { token, user: userData } = await authAPI.login({ email, password });
+      const response = await fetch('http://localhost:5001/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Login failed');
+      }
+
+      const { token, user: userData } = data;
       
-      // Check if user is admin
+      // Store token and user data
+      localStorage.setItem('token', token);
+      setUser(userData);
+      
+      // If user is admin, set admin data and redirect to admin dashboard
       if (userData.role === 'admin') {
-        // Store admin token and user data
         localStorage.setItem('adminToken', token);
         localStorage.setItem('adminUser', JSON.stringify(userData));
-        // Also store regular token for compatibility
-        localStorage.setItem('token', token);
-        setUser(userData);
-        
-        // Redirect to admin dashboard
-        navigate('/admin/dashboard');
+        // Use replace: true to prevent back navigation to login page
+        navigate('/admin/dashboard', { replace: true });
       } else {
-        // Regular user login
-        localStorage.setItem('token', token);
-        setUser(userData);
+        // Regular user stays on the current page or goes to home
+        navigate('/', { replace: true });
       }
     } catch (error: any) {
-      setError(error.response?.data?.message || 'Login failed');
+      setError(error.message || 'Login failed');
       throw error;
     }
   };
@@ -82,48 +101,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const register = async (name: string, email: string, password: string) => {
     try {
       setError(null);
-      const { token, user: userData } = await authAPI.register({ name, email, password });
-      localStorage.setItem('token', token);
-      setUser(userData);
-    } catch (error: any) {
-      setError(error.response?.data?.message || 'Registration failed');
-      throw error;
-    }
-  };
-
-  const sendOTP = async (email: string, name?: string) => {
-    try {
-      setError(null);
-      await emailVerificationAPI.sendOTP({ email, name });
-    } catch (error: any) {
-      setError(error.response?.data?.message || 'Failed to send verification code');
-      throw error;
-    }
-  };
-
-  const verifyOTP = async (email: string, otp: string, name: string, password: string) => {
-    try {
-      setError(null);
-      const { token, user: userData } = await emailVerificationAPI.verifyOTP({ 
-        email, 
-        otp, 
-        name, 
-        password 
+      const response = await fetch('http://localhost:5001/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name, email, password }),
       });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Registration failed');
+      }
+
+      const { token, user: userData } = data;
       localStorage.setItem('token', token);
       setUser(userData);
+      navigate('/');
     } catch (error: any) {
-      setError(error.response?.data?.message || 'Verification failed');
-      throw error;
-    }
-  };
-
-  const resendOTP = async (email: string, name?: string) => {
-    try {
-      setError(null);
-      await emailVerificationAPI.resendOTP({ email, name });
-    } catch (error: any) {
-      setError(error.response?.data?.message || 'Failed to resend verification code');
+      setError(error.message || 'Registration failed');
       throw error;
     }
   };
@@ -133,6 +130,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem('adminToken');
     localStorage.removeItem('adminUser');
     setUser(null);
+    navigate('/');
   };
 
   const clearAllAuth = () => {
@@ -150,9 +148,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         error,
         login,
         register,
-        sendOTP,
-        verifyOTP,
-        resendOTP,
         logout,
         clearAllAuth,
       }}

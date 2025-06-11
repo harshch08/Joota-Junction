@@ -47,7 +47,7 @@ const OrdersPage: React.FC = () => {
 
   useEffect(() => {
     if (!user) {
-      navigate('/');
+      navigate('/', { replace: true });
       return;
     }
     fetchOrders();
@@ -58,6 +58,10 @@ const OrdersPage: React.FC = () => {
       setLoading(true);
       setError(null);
       const token = localStorage.getItem('token');
+      if (!token) {
+        navigate('/', { replace: true });
+        return;
+      }
       const response = await fetch('http://localhost:5001/api/orders', {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -84,6 +88,9 @@ const OrdersPage: React.FC = () => {
         }));
         
         setOrders(validatedOrders);
+      } else if (response.status === 401) {
+        // Handle unauthorized access
+        navigate('/', { replace: true });
       } else {
         const errorData = await response.json().catch(() => ({}));
         console.error('Failed to fetch orders:', response.status, errorData);
@@ -106,38 +113,38 @@ const OrdersPage: React.FC = () => {
   };
 
   const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'pending':
+  switch (status) {
+    case 'pending':
         return <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-500" />;
-      case 'processing':
+    case 'processing':
         return <Package className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500" />;
-      case 'shipped':
+    case 'shipped':
         return <Truck className="h-4 w-4 sm:h-5 sm:w-5 text-purple-500" />;
-      case 'delivered':
+    case 'delivered':
         return <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500" />;
       case 'cancelled':
         return <XCircle className="h-4 w-4 sm:h-5 sm:w-5 text-red-500" />;
-      default:
+    default:
         return <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-gray-500" />;
-    }
-  };
+  }
+};
 
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'processing':
-        return 'bg-blue-100 text-blue-800';
-      case 'shipped':
-        return 'bg-purple-100 text-purple-800';
-      case 'delivered':
-        return 'bg-green-100 text-green-800';
+  switch (status) {
+    case 'pending':
+      return 'bg-yellow-100 text-yellow-800';
+    case 'processing':
+      return 'bg-blue-100 text-blue-800';
+    case 'shipped':
+      return 'bg-purple-100 text-purple-800';
+    case 'delivered':
+      return 'bg-green-100 text-green-800';
       case 'cancelled':
         return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
+    default:
+      return 'bg-gray-100 text-gray-800';
+  }
+};
 
   const getStatusText = (status: string) => {
     switch (status) {
@@ -178,11 +185,6 @@ const OrdersPage: React.FC = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Header
-          onSearch={handleSearch}
-          onCategorySelect={handleCategorySelect}
-          selectedCategory={selectedCategory}
-        />
         <div className="flex items-center justify-center min-h-[calc(100vh-200px)]">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
@@ -196,11 +198,6 @@ const OrdersPage: React.FC = () => {
   if (error) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Header
-          onSearch={handleSearch}
-          onCategorySelect={handleCategorySelect}
-          selectedCategory={selectedCategory}
-        />
         <div className="flex items-center justify-center min-h-[calc(100vh-200px)]">
           <div className="text-center">
             <p className="text-red-600 mb-4">{error}</p>
@@ -218,12 +215,6 @@ const OrdersPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header
-        onSearch={handleSearch}
-        onCategorySelect={handleCategorySelect}
-        selectedCategory={selectedCategory}
-      />
-
       {/* Page Header */}
       <div className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

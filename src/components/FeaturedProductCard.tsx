@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ShoppingCart } from 'lucide-react';
+import { ShoppingCart, Star, Heart, TrendingUp } from 'lucide-react';
 import { Product } from '../types';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -22,6 +22,7 @@ interface FeaturedProductCardProps {
 const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({ product, onProductClick, onAuthRequired }) => {
   const [selectedSize, setSelectedSize] = useState('');
   const [showSizeSelector, setShowSizeSelector] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
   const { addToCart } = useCart();
   const { user } = useAuth();
 
@@ -29,22 +30,14 @@ const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({ product, onPr
     e.stopPropagation();
     
     if (!user) {
-      console.log('User not logged in, showing auth modal');
       onAuthRequired();
       return;
     }
 
     if (!selectedSize) {
-      console.log('No size selected, showing size selector');
       setShowSizeSelector(true);
       return;
     }
-
-    console.log('Adding to cart:', {
-      id: product._id || product.id,
-      name: product.name,
-      size: selectedSize
-    });
 
     addToCart({
       id: product._id || product.id || '',
@@ -75,72 +68,135 @@ const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({ product, onPr
     }
   };
 
-  // Helper function to get available sizes with stock
   const getAvailableSizes = () => {
     if (!product.sizes) return [];
-    
     return product.sizes.filter(sizeObj => sizeObj.stock > 0);
   };
 
-  // Check if product has any available stock
   const hasAvailableStock = () => {
     return getAvailableSizes().length > 0;
   };
 
   return (
     <div
-      className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transform hover:scale-105 transition-all duration-300 cursor-pointer group relative overflow-hidden"
+      className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer relative overflow-hidden border border-gray-100"
       onClick={() => onProductClick(product)}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
-      <div className="relative">
+      {/* Featured Badge */}
+      <div className="absolute top-3 left-3 z-10 flex items-center gap-2">
+        <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg flex items-center gap-1">
+          <TrendingUp className="w-3 h-3" />
+          Featured
+        </div>
+      </div>
+
+      {/* Image Container */}
+      <div className="relative aspect-square overflow-hidden bg-gray-50">
         <img
           src={product.images[0]}
           alt={product.name}
-          className="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-300"
+          className={`w-full h-full object-cover transition-transform duration-500 ${
+            isHovered ? 'scale-110' : 'scale-100'
+          }`}
         />
+        
+        {/* Sale Badge */}
         {product.originalPrice && (
-          <span className="absolute top-4 left-4 bg-gradient-to-r from-red-500 to-pink-500 text-white px-3 py-1 rounded-full text-sm font-bold shadow-lg">
+          <div className="absolute top-3 right-3 bg-black text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
             Sale
-          </span>
+          </div>
         )}
+
+        {/* Rating Badge */}
+        {product.rating && (
+          <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm text-black px-2 py-1 rounded-full text-xs font-semibold flex items-center gap-1 shadow-sm">
+            <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+            {product.rating.toFixed(1)}
+          </div>
+        )}
+
+        {/* Out of Stock Overlay */}
         {!hasAvailableStock() && (
-          <div className="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center">
-            <span className="bg-red-600 text-white px-4 py-2 rounded-lg text-lg font-bold">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center">
+            <span className="bg-white text-black px-4 py-2 rounded-lg text-sm font-bold">
               Out of Stock
             </span>
           </div>
         )}
+
+        {/* Quick Actions */}
+        <div className={`absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/60 to-transparent transform transition-transform duration-300 ${
+          isHovered ? 'translate-y-0' : 'translate-y-full'
+        }`}>
+          <button
+            onClick={handleAddToCart}
+            disabled={!hasAvailableStock()}
+            className={`w-full py-2 px-4 rounded-lg font-semibold transition-all duration-300 flex items-center justify-center space-x-2 ${
+              hasAvailableStock()
+                ? 'bg-white text-black hover:bg-gray-100'
+                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+            }`}
+          >
+            <ShoppingCart className="h-4 w-4" />
+            <span>{hasAvailableStock() ? 'Add to Cart' : 'Out of Stock'}</span>
+          </button>
+        </div>
       </div>
 
-      <div className="px-6 pb-6 pt-2 text-center">
-        <h3 className="font-extrabold text-xl text-gray-900 mb-1 truncate group-hover:text-blue-700 transition-colors">
-          {product.name}
-        </h3>
-        <p className="text-sm text-gray-500 mb-2 font-semibold uppercase tracking-wide">{product.brand}</p>
-        <div className="flex items-center justify-center space-x-2 mb-2">
-          <span className="text-2xl font-extrabold text-purple-700 drop-shadow-lg">{formatIndianCurrency(product.price)}</span>
-          {product.originalPrice && (
-            <span className="text-base text-gray-400 line-through">{formatIndianCurrency(product.originalPrice)}</span>
+      {/* Product Info */}
+      <div className="p-4">
+        <div className="mb-2">
+          <p className="text-sm text-gray-500 font-medium mb-1">{product.brand}</p>
+          <h3 className="font-bold text-gray-900 group-hover:text-black transition-colors line-clamp-2">
+            {product.name}
+          </h3>
+        </div>
+
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <span className="text-lg font-bold text-black">{formatIndianCurrency(product.price)}</span>
+            {product.originalPrice && (
+              <span className="text-sm text-gray-400 line-through">{formatIndianCurrency(product.originalPrice)}</span>
+            )}
+          </div>
+          {product.category && (
+            <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+              {product.category}
+            </span>
           )}
         </div>
-        <div className="flex items-center justify-center gap-2 mt-2">
-          <span className="inline-block bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-semibold shadow">{product.category}</span>
-        </div>
-        
-        {/* Add to Cart Button */}
-        <button
-          onClick={handleAddToCart}
-          disabled={!hasAvailableStock()}
-          className={`w-full mt-4 py-3 px-4 rounded-xl font-bold transition-all duration-300 flex items-center justify-center space-x-2 ${
-            hasAvailableStock()
-              ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 transform hover:scale-105'
-              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-          }`}
-        >
-          <ShoppingCart className="h-5 w-5" />
-          <span>{hasAvailableStock() ? 'Add to Cart' : 'Out of Stock'}</span>
-        </button>
       </div>
+
+      {/* Size Selector */}
+      {showSizeSelector && (
+        <div 
+          className="absolute inset-0 bg-white/95 backdrop-blur-sm p-4 z-10"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <h4 className="text-sm font-semibold mb-3">Select Size</h4>
+          <div className="grid grid-cols-3 gap-2">
+            {product.sizes && product.sizes.map((sizeObj) => (
+              <button
+                key={sizeObj.size}
+                onClick={() => handleSizeSelect(sizeObj.size)}
+                disabled={sizeObj.stock === 0}
+                className={`py-2 px-3 border rounded-lg text-sm transition-all duration-200 ${
+                  sizeObj.stock === 0
+                    ? 'border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed'
+                    : 'border-gray-300 hover:border-black hover:bg-black hover:text-white'
+                }`}
+              >
+                {sizeObj.size}
+                {sizeObj.stock === 0 && (
+                  <span className="block text-xs text-gray-400">Out</span>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

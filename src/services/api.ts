@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { Product, Brand } from '../types';
 
 // Force API URL to use port 5001
 const API_URL = 'http://localhost:5001/api';
@@ -80,22 +81,6 @@ export const authAPI = {
   }
 };
 
-// Email Verification API
-export const emailVerificationAPI = {
-  sendOTP: async (data: { email: string; name?: string }) => {
-    const response = await api.post('/email-verification/send-otp', data);
-    return response.data;
-  },
-  verifyOTP: async (data: { email: string; otp: string; name: string; password: string }) => {
-    const response = await api.post('/email-verification/verify-otp', data);
-    return response.data;
-  },
-  resendOTP: async (data: { email: string; name?: string }) => {
-    const response = await api.post('/email-verification/resend-otp', data);
-    return response.data;
-  }
-};
-
 // Store Settings API
 export const storeSettingsAPI = {
   getStoreSettings: async () => {
@@ -106,11 +91,22 @@ export const storeSettingsAPI = {
 
 // Products API
 export const productsAPI = {
-  getAllProducts: async (params?: { search?: string; category?: string; brand?: string; minPrice?: number; maxPrice?: number }) => {
+  getAllProducts: async (params: { brand?: string; brandSlug?: string; category?: string; minPrice?: number; maxPrice?: number } = {}): Promise<Product[]> => {
     try {
-      console.log('Fetching products with params:', params);
+      // If brandSlug is provided, use the brand-specific endpoint
+      if (params.brandSlug) {
+        console.log('Fetching products for brand slug:', params.brandSlug);
+        const response = await api.get(`/brands/${params.brandSlug}/products`);
+        return response.data;
+      }
+      // If brand name is provided, use it as a filter
+      if (params.brand) {
+        console.log('Fetching products for brand:', params.brand);
+        const response = await api.get('/products', { params: { brand: params.brand } });
+        return response.data;
+      }
+      // Otherwise use the general products endpoint
       const response = await api.get('/products', { params });
-      console.log('Products fetched successfully:', response.data);
       return response.data;
     } catch (error) {
       console.error('Error fetching products:', error);
@@ -173,6 +169,46 @@ export const categoriesAPI = {
   },
   getCategoryById: async (id: string) => {
     const response = await api.get(`/categories/${id}`);
+    return response.data;
+  }
+};
+
+// Brands API
+export const brandsAPI = {
+  getAllBrands: async (): Promise<Brand[]> => {
+      const response = await api.get('/brands');
+      return response.data;
+  },
+  getBrandById: async (id: string) => {
+    const response = await api.get(`/brands/${id}`);
+    return response.data;
+  },
+  getBrandBySlug: async (slug: string): Promise<Brand> => {
+    if (!slug) {
+      throw new Error('Brand slug is required');
+    }
+    try {
+    const response = await api.get(`/brands/slug/${slug}`);
+    return response.data;
+    } catch (error) {
+      console.error(`Error fetching brand with slug ${slug}:`, error);
+      throw error;
+    }
+  },
+  createBrand: async (data: any) => {
+    const response = await api.post('/brands', data);
+    return response.data;
+  },
+  updateBrand: async (id: string, data: any) => {
+    const response = await api.put(`/brands/${id}`, data);
+    return response.data;
+  },
+  deleteBrand: async (id: string) => {
+    const response = await api.delete(`/brands/${id}`);
+    return response.data;
+  },
+  getAllBrandsAdmin: async () => {
+    const response = await api.get('/brands/admin/all');
     return response.data;
   }
 };

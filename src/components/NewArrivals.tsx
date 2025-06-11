@@ -56,7 +56,7 @@ const NewArrivals: React.FC<NewArrivalsProps> = ({ onProductClick, onAuthRequire
           </h2>
           <p className="text-gray-600 mt-4 max-w-2xl mx-auto">Discover our latest additions to the collection, featuring the newest styles and trends.</p>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           {products.map((product) => (
             <motion.div
               key={product._id}

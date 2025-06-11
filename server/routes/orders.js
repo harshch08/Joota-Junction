@@ -162,7 +162,7 @@ router.put('/:id/status', protect, async (req, res) => {
   try {
     console.log(`PUT /api/orders/${req.params.id}/status - Updating order status`);
     console.log('Request body:', req.body);
-    
+
     const { status } = req.body;
     const validStatuses = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
     

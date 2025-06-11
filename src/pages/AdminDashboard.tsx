@@ -36,6 +36,9 @@ import {
   DialogClose,
   DialogDescription
 } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { Image as ImageIcon } from "lucide-react";
+import { Label } from "@/components/ui/label";
 
 interface DashboardStats {
   totalUsers: number;
@@ -179,6 +182,17 @@ interface StoreSettings {
   updatedAt: string;
 }
 
+interface Brand {
+  _id: string;
+  name: string;
+  description: string;
+  logo: string;  // This will store the filename from images/logo directory
+  bgColor: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
 // Indian currency formatter
 const formatIndianCurrency = (amount: number) => {
   return new Intl.NumberFormat('en-IN', {
@@ -203,7 +217,7 @@ const AdminDashboard: React.FC = () => {
   const [recentOrders, setRecentOrders] = useState<RecentOrder[]>([]);
   const [lowStockProducts, setLowStockProducts] = useState<LowStockProduct[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [brands, setBrands] = useState<Brand[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -217,21 +231,29 @@ const AdminDashboard: React.FC = () => {
     sizes: '',
     description: '',
   });
-  const [newCategory, setNewCategory] = useState({
+  const [newBrand, setNewBrand] = useState<{
+    name: string;
+    description: string;
+    logo: string;
+    bgColor: string;
+    isActive: boolean;
+  }>({
     name: '',
     description: '',
-    image: '',
+    logo: '',
+    bgColor: '#ffffff',
+    isActive: true
   });
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [editingBrand, setEditingBrand] = useState<Brand | null>(null);
   const [managingInventory, setManagingInventory] = useState<Product | null>(null);
   const [inventoryUpdates, setInventoryUpdates] = useState<{[key: number]: number}>({});
   const [localInventory, setLocalInventory] = useState<{[key: number]: number}>({});
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [showProductForm, setShowProductForm] = useState(false);
-  const [showCategoryForm, setShowCategoryForm] = useState(false);
+  const [showBrandForm, setShowBrandForm] = useState(false);
   const [showProductModal, setShowProductModal] = useState(false);
-  const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [showBrandModal, setShowBrandModal] = useState(false);
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
   const [allProductsForFeatured, setAllProductsForFeatured] = useState<Product[]>([]);
   const [showFeaturedModal, setShowFeaturedModal] = useState(false);
@@ -244,7 +266,7 @@ const AdminDashboard: React.FC = () => {
   useEffect(() => {
     fetchDashboardData();
     fetchProducts();
-    fetchCategories();
+    fetchBrands();
     fetchOrders();
     fetchFeaturedProducts();
     fetchAllProductsForFeatured();
@@ -303,10 +325,10 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
-  const fetchCategories = async () => {
+  const fetchBrands = async () => {
     try {
       const token = localStorage.getItem('adminToken');
-      const response = await fetch('http://localhost:5001/api/admin/categories', {
+      const response = await fetch('http://localhost:5001/api/brands/admin/all', {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -314,10 +336,13 @@ const AdminDashboard: React.FC = () => {
 
       if (response.ok) {
         const data = await response.json();
-        setCategories(data.categories || []);
+        setBrands(data);
+      } else {
+        const error = await response.json();
+        console.error('Error fetching brands:', error.message);
       }
     } catch (error) {
-      console.error('Error fetching categories:', error);
+      console.error('Error fetching brands:', error);
     }
   };
 
@@ -637,90 +662,116 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
-  // Categories CRUD Functions
-  const handleAddCategory = async () => {
+  // Brands CRUD Functions
+  const handleAddBrand = async () => {
     try {
+      if (!newBrand.name.trim()) {
+        alert('Brand name is required');
+        return;
+      }
+
       const token = localStorage.getItem('adminToken');
-      const response = await fetch('http://localhost:5001/api/admin/categories', {
+      const response = await fetch('http://localhost:5001/api/brands', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          name: newCategory.name,
-          description: newCategory.description,
-          image: newCategory.image || null
+          name: newBrand.name.trim(),
+          description: newBrand.description.trim(),
+          logo: newBrand.logo ? `/images/logo/${newBrand.logo}` : '',
+          bgColor: newBrand.bgColor,
+          isActive: newBrand.isActive
         }),
       });
 
       if (response.ok) {
-        setNewCategory({
+        setNewBrand({
           name: '',
           description: '',
-          image: '',
+          logo: '',
+          bgColor: '#ffffff',
+          isActive: true
         });
-        fetchCategories();
+        setShowBrandModal(false);
+        fetchBrands();
+      } else {
+        const error = await response.json();
+        alert(error.message || 'Error adding brand');
       }
     } catch (error) {
-      console.error('Error adding category:', error);
+      console.error('Error adding brand:', error);
+      alert('Error adding brand. Please try again.');
     }
   };
 
-  const handleUpdateCategory = async () => {
-    if (!editingCategory) return;
+  const handleUpdateBrand = async () => {
+    if (!editingBrand) return;
     
     try {
+      if (!newBrand.name.trim()) {
+        alert('Brand name is required');
+        return;
+      }
+
       const token = localStorage.getItem('adminToken');
-      const response = await fetch(`http://localhost:5001/api/admin/categories/${editingCategory._id}`, {
+      const response = await fetch(`http://localhost:5001/api/brands/${editingBrand._id}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          name: newCategory.name,
-          description: newCategory.description,
-          image: newCategory.image || null
+          name: newBrand.name.trim(),
+          description: newBrand.description.trim(),
+          logo: newBrand.logo ? `/images/logo/${newBrand.logo}` : '',
+          bgColor: newBrand.bgColor,
+          isActive: newBrand.isActive
         }),
       });
 
       if (response.ok) {
-        setEditingCategory(null);
-        setNewCategory({
+        setEditingBrand(null);
+        setNewBrand({
           name: '',
           description: '',
-          image: '',
+          logo: '',
+          bgColor: '#ffffff',
+          isActive: true
         });
-        fetchCategories();
+        setShowBrandModal(false);
+        fetchBrands();
+      } else {
+        const error = await response.json();
+        alert(error.message || 'Error updating brand');
       }
     } catch (error) {
-      console.error('Error updating category:', error);
+      console.error('Error updating brand:', error);
+      alert('Error updating brand. Please try again.');
     }
   };
 
-  const handleEditCategory = (category: Category) => {
-    setEditingCategory(category);
-    setNewCategory({
-      name: category.name,
-      description: category.description,
-      image: category.image || '',
+  const handleEditBrand = (brand: Brand) => {
+    setEditingBrand(brand);
+    setNewBrand({
+      name: brand.name,
+      description: brand.description,
+      logo: brand.logo || '',
+      bgColor: brand.bgColor || '#ffffff',
+      isActive: brand.isActive
     });
+    setShowBrandModal(true);
   };
 
-  const handleCancelEditCategory = () => {
-    setEditingCategory(null);
-    setNewCategory({
-      name: '',
-      description: '',
-      image: '',
-    });
-  };
+  const handleDeleteBrand = async (brandId: string) => {
+    if (!confirm('Are you sure you want to delete this brand? This action cannot be undone.')) {
+      return;
+    }
 
-  const handleDeleteCategory = async (categoryId: string) => {
     try {
       const token = localStorage.getItem('adminToken');
-      const response = await fetch(`http://localhost:5001/api/admin/categories/${categoryId}`, {
+      const response = await fetch(`http://localhost:5001/api/brands/${brandId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -728,10 +779,14 @@ const AdminDashboard: React.FC = () => {
       });
 
       if (response.ok) {
-        fetchCategories();
+        fetchBrands();
+      } else {
+        const error = await response.json();
+        alert(error.message || 'Error deleting brand');
       }
     } catch (error) {
-      console.error('Error deleting category:', error);
+      console.error('Error deleting brand:', error);
+      alert('Error deleting brand. Please try again.');
     }
   };
 
@@ -955,6 +1010,22 @@ const AdminDashboard: React.FC = () => {
     });
   };
 
+  // Add getBrandLogo function
+  const getBrandLogo = (brandName: string) => {
+    const logoMap: { [key: string]: string } = {
+      'Nike': 'nike.png',
+      'Adidas': 'adidas.png',
+      'New Balance': 'new-balance.png',
+      'Skechers': 'skechers.png',
+      'Crocs': 'crocs.png',
+      'Asics': 'asics.png',
+      'Louis Vuitton': 'louis-vuitton.png',
+      'Puma': 'puma.png',
+      'Reebok': 'reebok.png'
+    };
+    return logoMap[brandName] || 'default.png';
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -973,9 +1044,11 @@ const AdminDashboard: React.FC = () => {
         <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-14 sm:h-16">
             <div className="flex items-center">
-              <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                JOOTA JUNCTION Admin
-              </h1>
+              <img
+                src="/logo.png"
+                alt="Joota Junction"
+                className="h-32 w-auto"
+              />
             </div>
             <div className="flex items-center space-x-2 sm:space-x-4">
               <Button 
@@ -1007,7 +1080,7 @@ const AdminDashboard: React.FC = () => {
           <TabsList className="grid w-full grid-cols-5 mb-4 sm:mb-6 bg-white shadow-sm h-auto">
             <TabsTrigger value="overview" className="text-xs sm:text-sm py-2 sm:py-3 px-1 sm:px-3">Overview</TabsTrigger>
             <TabsTrigger value="products" className="text-xs sm:text-sm py-2 sm:py-3 px-1 sm:px-3">Products</TabsTrigger>
-            <TabsTrigger value="categories" className="text-xs sm:text-sm py-2 sm:py-3 px-1 sm:px-3">Categories</TabsTrigger>
+            <TabsTrigger value="brands" className="text-xs sm:text-sm py-2 sm:py-3 px-1 sm:px-3">Brands</TabsTrigger>
             <TabsTrigger value="orders" className="text-xs sm:text-sm py-2 sm:py-3 px-1 sm:px-3">Orders</TabsTrigger>
             <TabsTrigger value="settings" className="text-xs sm:text-sm py-2 sm:py-3 px-1 sm:px-3">Settings</TabsTrigger>
           </TabsList>
@@ -1132,11 +1205,11 @@ const AdminDashboard: React.FC = () => {
                               variant="outline" 
                               size="sm" 
                               onClick={() => {
-                                setActiveTab('products');
-                                const productToEdit = products.find(p => p._id === product._id);
-                                if (productToEdit) {
-                                  handleEditProduct(productToEdit);
-                                }
+                              setActiveTab('products');
+                              const productToEdit = products.find(p => p._id === product._id);
+                              if (productToEdit) {
+                                handleEditProduct(productToEdit);
+                              }
                               }}
                               className="text-xs px-2 py-1 h-7 sm:h-8"
                             >
@@ -1189,7 +1262,7 @@ const AdminDashboard: React.FC = () => {
                                 src={product.images[0] || 'https://via.placeholder.com/40'} 
                                 alt={product.name} 
                                 className="w-10 h-10 sm:w-12 sm:h-12 object-cover rounded-md"
-                              />
+                  />
                             </TableCell>
                             <TableCell className="font-medium text-xs sm:text-sm px-2 sm:px-6">
                               <div>
@@ -1213,17 +1286,17 @@ const AdminDashboard: React.FC = () => {
                                 <Minus className="h-3 w-3 mr-1" />
                                 <span className="hidden sm:inline">Remove</span>
                                 <span className="sm:hidden">Remove</span>
-                              </Button>
+                        </Button>
                             </TableCell>
                           </TableRow>
                         ))
-                      ) : (
+                    ) : (
                         <TableRow>
                           <TableCell colSpan={5} className="text-center py-8 text-gray-500">
                             No featured products selected. Click "Manage Featured" to add products.
                           </TableCell>
                         </TableRow>
-                      )}
+                    )}
                     </TableBody>
                   </Table>
                 </div>
@@ -1321,7 +1394,7 @@ const AdminDashboard: React.FC = () => {
                               >
                                 <Trash2 className="h-3 w-3 mr-1" />
                                 <span className="hidden sm:inline">Delete</span>
-                              </Button>
+                                  </Button>
                             </div>
                           </TableCell>
                         </TableRow>
@@ -1333,22 +1406,22 @@ const AdminDashboard: React.FC = () => {
             </Card>
           </TabsContent>
 
-          {/* Categories Tab */}
-          <TabsContent value="categories" className="space-y-4 sm:space-y-6">
+          {/* Brands Tab */}
+          <TabsContent value="brands" className="space-y-4 sm:space-y-6">
             <Card className="shadow-lg border-0">
               <CardHeader className="bg-gradient-to-r from-green-600 to-teal-600 text-white rounded-t-lg px-4 sm:px-6 py-3 sm:py-4">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
-                  <CardTitle className="text-base sm:text-lg lg:text-xl">Categories Management</CardTitle>
+                  <CardTitle className="text-base sm:text-lg lg:text-xl">Brands Management</CardTitle>
                   <Button 
                     onClick={() => {
-                      setEditingCategory(null);
-                      setNewCategory({ name: '', description: '', image: '' });
-                      setShowCategoryModal(true);
+                      setEditingBrand(null);
+                      setNewBrand({ name: '', description: '', logo: '', bgColor: '#ffffff', isActive: true });
+                      setShowBrandModal(true);
                     }}
                     className="bg-white text-green-600 hover:bg-gray-100 text-xs sm:text-sm px-3 sm:px-4 py-2 h-8 sm:h-9"
                   >
                     <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-                    <span className="hidden sm:inline">Add Category</span>
+                    <span className="hidden sm:inline">Add Brand</span>
                     <span className="sm:hidden">Add</span>
                   </Button>
                 </div>
@@ -1364,19 +1437,28 @@ const AdminDashboard: React.FC = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {categories.map((category) => (
-                        <TableRow key={category._id} className="hover:bg-gray-50">
-                          <TableCell className="font-medium text-xs sm:text-sm px-2 sm:px-6">{category.name}</TableCell>
-                          <TableCell className="text-xs sm:text-sm px-2 sm:px-6 hidden sm:table-cell">{category.description}</TableCell>
+                      {brands.map((brand) => (
+                        <TableRow key={brand._id} className="hover:bg-gray-50">
+                          <TableCell className="px-2 sm:px-6">
+                            <img 
+                              src={`/images/logo/${getBrandLogo(brand.name)}`}
+                              alt={brand.name} 
+                              className="w-8 h-8 object-contain rounded"
+                            />
+                          </TableCell>
+                          <TableCell className="font-medium text-xs sm:text-sm px-2 sm:px-6">{brand.name}</TableCell>
+                          <TableCell className="text-xs sm:text-sm px-2 sm:px-6 hidden sm:table-cell">{brand.description}</TableCell>
+                          <TableCell className="px-2 sm:px-6">
+                            <Badge variant={brand.isActive ? "default" : "secondary"}>
+                              {brand.isActive ? "Active" : "Inactive"}
+                            </Badge>
+                          </TableCell>
                           <TableCell className="px-2 sm:px-6">
                             <div className="flex flex-col sm:flex-row gap-1 sm:gap-2">
                               <Button 
                                 variant="outline" 
                                 size="sm" 
-                                onClick={() => {
-                                  handleEditCategory(category);
-                                  setShowCategoryModal(true);
-                                }}
+                                onClick={() => handleEditBrand(brand)}
                                 className="text-xs px-2 py-1 h-7 sm:h-8"
                               >
                                 <Edit className="h-3 w-3 mr-1" />
@@ -1385,7 +1467,7 @@ const AdminDashboard: React.FC = () => {
                               <Button 
                                 variant="outline" 
                                 size="sm" 
-                                onClick={() => handleDeleteCategory(category._id)}
+                                onClick={() => handleDeleteBrand(brand._id)}
                                 className="text-xs px-2 py-1 h-7 sm:h-8 text-red-600 hover:text-red-700"
                               >
                                 <Trash2 className="h-3 w-3 mr-1" />
@@ -1447,8 +1529,8 @@ const AdminDashboard: React.FC = () => {
                                 className="text-xs px-2 py-1 h-7 sm:h-8"
                               >
                                 <Eye className="h-3 w-3 mr-1" />
-                                <span className="hidden sm:inline">View</span>
-                              </Button>
+                              <span className="hidden sm:inline">View</span>
+                            </Button>
                               <Button 
                                 variant="outline" 
                                 size="sm" 
@@ -1511,7 +1593,7 @@ const AdminDashboard: React.FC = () => {
                 {storeSettings ? (
                   <div className="space-y-6">
                     {/* Contact Emails */}
-                    <div>
+                  <div>
                       <div className="flex items-center justify-between mb-3">
                         <h3 className="text-base sm:text-lg font-medium text-gray-900">Contact Emails</h3>
                         <Button 
@@ -1523,7 +1605,7 @@ const AdminDashboard: React.FC = () => {
                           <Plus className="h-3 w-3 mr-1" />
                           Add Email
                         </Button>
-                      </div>
+                  </div>
                       <div className="space-y-3">
                         {storeSettings.contactEmails.map((email, index) => (
                           <div key={index} className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg">
@@ -1558,8 +1640,8 @@ const AdminDashboard: React.FC = () => {
                               className="text-red-600 hover:text-red-700 text-xs"
                             >
                               <Trash2 className="h-3 w-3" />
-                            </Button>
-                          </div>
+                  </Button>
+                </div>
                         ))}
                       </div>
                     </div>
@@ -1986,40 +2068,40 @@ const AdminDashboard: React.FC = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Category Modal */}
-      <Dialog open={showCategoryModal} onOpenChange={setShowCategoryModal}>
+      {/* Brand Modal */}
+      <Dialog open={showBrandModal} onOpenChange={setShowBrandModal}>
         <DialogContent className="max-w-lg w-full">
           <DialogHeader>
-            <DialogTitle>{editingCategory ? 'Edit Category' : 'Add New Category'}</DialogTitle>
+            <DialogTitle>{editingBrand ? 'Edit Brand' : 'Add New Brand'}</DialogTitle>
             <DialogDescription>
-              {editingCategory ? 'Update category details below.' : 'Fill in the details to add a new category.'}
+              {editingBrand ? 'Update brand details below.' : 'Fill in the details to add a new brand.'}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
             <Input
-              placeholder="Category Name"
-              value={newCategory.name}
-              onChange={(e) => setNewCategory({...newCategory, name: e.target.value})}
+              placeholder="Brand Name"
+              value={newBrand.name}
+              onChange={(e) => setNewBrand({...newBrand, name: e.target.value})}
             />
             <Input
               placeholder="Image URL (optional)"
-              value={newCategory.image}
-              onChange={(e) => setNewCategory({...newCategory, image: e.target.value})}
+              value={newBrand.logo}
+              onChange={(e) => setNewBrand({...newBrand, logo: e.target.value})}
             />
             <Input
               placeholder="Description"
-              value={newCategory.description}
-              onChange={(e) => setNewCategory({...newCategory, description: e.target.value})}
+              value={newBrand.description}
+              onChange={(e) => setNewBrand({...newBrand, description: e.target.value})}
             />
           </div>
           <DialogFooter className="mt-4">
-            {editingCategory ? (
-              <Button onClick={async () => { await handleUpdateCategory(); setShowCategoryModal(false); }} className="bg-green-600 hover:bg-green-700">
-                <Edit className="h-4 w-4 mr-2" /> Update Category
+            {editingBrand ? (
+              <Button onClick={async () => { await handleUpdateBrand(); setShowBrandModal(false); }} className="bg-green-600 hover:bg-green-700">
+                <Edit className="h-4 w-4 mr-2" /> Update Brand
               </Button>
             ) : (
-              <Button onClick={async () => { await handleAddCategory(); setShowCategoryModal(false); }} className="bg-green-600 hover:bg-green-700">
-                <Plus className="h-4 w-4 mr-2" /> Add Category
+              <Button onClick={async () => { await handleAddBrand(); setShowBrandModal(false); }} className="bg-green-600 hover:bg-green-700">
+                <Plus className="h-4 w-4 mr-2" /> Add Brand
               </Button>
             )}
             <DialogClose asChild>
@@ -2232,4 +2314,4 @@ const AdminDashboard: React.FC = () => {
   );
 };
 
-export default AdminDashboard;
+export default AdminDashboard; 

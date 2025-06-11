@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
-import { X, Mail, Lock } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import EmailVerificationModal from './EmailVerificationModal';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -9,160 +12,128 @@ interface AuthModalProps {
 }
 
 const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
+  const [isLogin, setIsLogin] = useState(true);
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isAdminLogin, setIsAdminLogin] = useState(false);
-  const [showEmailVerification, setShowEmailVerification] = useState(false);
-  const { login, error: authError } = useAuth();
-  const [errorMessage, setErrorMessage] = useState('');
+  const { login, register } = useAuth();
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Validate form fields
-    if (!email.trim()) {
-      setErrorMessage('Please enter your email');
-      return;
-    }
-    if (!password.trim()) {
-      setErrorMessage('Please enter your password');
-      return;
-    }
-    
+    setError('');
     setIsLoading(true);
-    setErrorMessage('');
-    setIsAdminLogin(false);
-    
+
     try {
-      console.log('Login attempt:', { email });
-      await login(email, password);
-      
-      // Check if this was an admin login
-      const adminUser = localStorage.getItem('adminUser');
-      if (adminUser) {
-        const userData = JSON.parse(adminUser);
-        if (userData.role === 'admin') {
-          setIsAdminLogin(true);
-          // Keep modal open briefly to show success message
-          setTimeout(() => {
-            onClose();
-            resetForm();
-          }, 1500);
-          return;
-        }
+      if (isLogin) {
+        await login(email, password);
+      } else {
+        await register(name, email, password);
       }
-      
       onClose();
-      resetForm();
-    } catch (error) {
-      console.error('Login error:', error);
-      // Error is handled by the AuthContext
+    } catch (err: any) {
+      setError(err.message || 'Authentication failed');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const resetForm = () => {
-    setEmail('');
-    setPassword('');
-    setErrorMessage('');
-    setIsAdminLogin(false);
+  const handleTabChange = (value: string) => {
+    setIsLogin(value === 'login');
+    setError('');
   };
-
-  const handleClose = () => {
-    resetForm();
-    onClose();
-  };
-
-  const handleShowLogin = () => {
-    setShowEmailVerification(false);
-    // The login modal is already open, so we just need to close the email verification modal
-  };
-
-  if (!isOpen) return null;
 
   return (
-    <>
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-lg max-w-md w-full p-6 relative">
-          <button
-            onClick={handleClose}
-            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
-          >
-            <X className="h-6 w-6" />
-          </button>
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle className="text-center text-2xl font-bold">
+            {isLogin ? 'Welcome Back' : 'Create Account'}
+          </DialogTitle>
+        </DialogHeader>
 
-          <div className="text-center mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">Welcome Back</h2>
-            <p className="text-gray-600 mt-2">Sign in to your account</p>
-          </div>
+        <Tabs defaultValue="login" onValueChange={handleTabChange} className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="login">Login</TabsTrigger>
+            <TabsTrigger value="register">Register</TabsTrigger>
+          </TabsList>
 
-          {isAdminLogin && (
-            <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-green-600 text-sm">
-              Admin login successful! Redirecting to admin dashboard...
-            </div>
-          )}
+          <TabsContent value="login">
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="Enter your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </div>
+              {error && <p className="text-sm text-red-500">{error}</p>}
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? 'Signing in...' : 'Sign In'}
+              </Button>
+            </form>
+          </TabsContent>
 
-          {(errorMessage || authError) && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
-              {errorMessage || authError}
-            </div>
-          )}
-
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div className="relative">
-              <Mail className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-              <input
-                type="email"
-                placeholder="Email Address"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                required
-              />
-            </div>
-
-            <div className="relative">
-              <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-              <input
-                type="password"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                required
-                minLength={6}
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={isLoading || isAdminLogin}
-              className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50"
-            >
-              {isLoading ? 'Signing In...' : isAdminLogin ? 'Redirecting...' : 'Sign In'}
-            </button>
-          </form>
-
-          <div className="mt-6 text-center">
-            <button
-              onClick={() => setShowEmailVerification(true)}
-              className="text-blue-600 hover:text-blue-700 font-medium"
-            >
-              Don't have an account? Create one
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Email Verification Modal */}
-      <EmailVerificationModal
-        isOpen={showEmailVerification}
-        onClose={() => setShowEmailVerification(false)}
-        onShowLogin={handleShowLogin}
-      />
-    </>
+          <TabsContent value="register">
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Name</Label>
+                <Input
+                  id="name"
+                  type="text"
+                  placeholder="Enter your name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="register-email">Email</Label>
+                <Input
+                  id="register-email"
+                  type="email"
+                  placeholder="Enter your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="register-password">Password</Label>
+                <Input
+                  id="register-password"
+                  type="password"
+                  placeholder="Create a password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </div>
+              {error && <p className="text-sm text-red-500">{error}</p>}
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? 'Creating account...' : 'Create Account'}
+              </Button>
+            </form>
+          </TabsContent>
+        </Tabs>
+      </DialogContent>
+    </Dialog>
   );
 };
 

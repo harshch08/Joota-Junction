@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { X, ShoppingCart, Star } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, ShoppingCart, Star, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Product } from '../types';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -12,11 +12,6 @@ interface ProductModalProps {
   onAuthRequired: () => void;
 }
 
-interface SizeObject {
-  size: number;
-  stock: number;
-}
-
 const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onClose, onAuthRequired }) => {
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedSize, setSelectedSize] = useState<number | null>(null);
@@ -24,9 +19,20 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onClose, o
   const { addToCart } = useCart();
   const { user } = useAuth();
 
+  // Prevent background scrolling when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
+
   if (!isOpen || !product) return null;
 
-  // Get the correct ID field (either id or _id)
   const productId = product.id || product._id;
   
   if (!productId) {
@@ -45,7 +51,6 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onClose, o
       return;
     }
 
-    // Check if selected size has enough stock
     const sizeObj = product.sizes?.find(s => s.size === selectedSize);
     if (!sizeObj || sizeObj.stock < quantity) {
       alert(`Sorry, only ${sizeObj?.stock || 0} items available in size ${selectedSize}`);
@@ -65,58 +70,84 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onClose, o
     onClose();
   };
 
-  // Helper function to get available sizes with stock
   const getAvailableSizes = () => {
     if (!product.sizes) return [];
-    
     return product.sizes.filter(sizeObj => sizeObj.stock > 0);
   };
 
-  // Check if product has any available stock
   const hasAvailableStock = () => {
     return getAvailableSizes().length > 0;
   };
 
-  // Get stock for selected size
   const getSelectedSizeStock = () => {
     if (!selectedSize || !product.sizes) return 0;
     const sizeObj = product.sizes.find(s => s.size === selectedSize);
     return sizeObj?.stock || 0;
   };
 
+  const nextImage = () => {
+    setSelectedImage((prev) => (prev + 1) % product.images.length);
+  };
+
+  const prevImage = () => {
+    setSelectedImage((prev) => (prev - 1 + product.images.length) % product.images.length);
+  };
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex justify-between items-center">
-          <h2 className="text-xl font-semibold text-gray-900">Product Details</h2>
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-3xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
+        {/* Header */}
+        <div className="sticky top-0 bg-white border-b border-gray-100 p-8 flex justify-between items-center z-10">
+          <div className="flex flex-col space-y-2">
+            <h2 className="text-3xl font-bold text-black tracking-tight uppercase">{product.brand}</h2>
+            <h3 className="text-xl text-gray-600 font-medium tracking-wide">{product.name}</h3>
+          </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
+            className="p-3 hover:bg-gray-100 rounded-full transition-all duration-200 hover:scale-110"
           >
-            <X className="h-6 w-6" />
+            <X className="h-6 w-6 text-gray-600" />
           </button>
         </div>
 
-        <div className="p-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="flex-1 overflow-y-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 p-8">
             {/* Product Images */}
-            <div className="space-y-4">
-              <div className="aspect-square overflow-hidden rounded-lg">
+            <div className="space-y-6">
+              <div className="relative aspect-square overflow-hidden rounded-2xl bg-gray-50 shadow-lg">
                 <img
                   src={product.images[selectedImage]}
                   alt={product.name}
                   className="w-full h-full object-cover"
                 />
+                {product.images.length > 1 && (
+                  <>
+                    <button
+                      onClick={prevImage}
+                      className="absolute left-6 top-1/2 -translate-y-1/2 p-3 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hover:bg-white transition-all duration-200 hover:scale-110"
+                    >
+                      <ChevronLeft className="h-6 w-6" />
+                    </button>
+                    <button
+                      onClick={nextImage}
+                      className="absolute right-6 top-1/2 -translate-y-1/2 p-3 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hover:bg-white transition-all duration-200 hover:scale-110"
+                    >
+                      <ChevronRight className="h-6 w-6" />
+                    </button>
+                  </>
+                )}
               </div>
               
               {product.images.length > 1 && (
-                <div className="flex space-x-2">
+                <div className="flex space-x-3 overflow-x-auto pb-2">
                   {product.images.map((image, index) => (
                     <button
                       key={`${productId}-image-${index}`}
                       onClick={() => setSelectedImage(index)}
-                      className={`w-20 h-20 rounded-lg overflow-hidden border-2 ${
-                        selectedImage === index ? 'border-blue-500' : 'border-gray-200'
+                      className={`flex-shrink-0 w-24 h-24 rounded-xl overflow-hidden border-2 transition-all duration-200 ${
+                        selectedImage === index 
+                          ? 'border-black ring-2 ring-gray-200' 
+                          : 'border-gray-200 hover:border-gray-300'
                       }`}
                     >
                       <img
@@ -131,48 +162,54 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onClose, o
             </div>
 
             {/* Product Info */}
-            <div className="space-y-6">
+            <div className="space-y-8">
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">{product.name}</h1>
-                <p className="text-lg text-gray-600 mt-1">{product.brand}</p>
-                
-                <div className="flex items-center space-x-2 mt-2"></div>
+                <div className="flex items-center space-x-3 mb-4">
+                  {product.rating && (
+                    <div className="flex items-center space-x-1.5 bg-gray-100 px-3 py-1.5 rounded-full">
+                      <Star className="h-4 w-4 fill-black text-black" />
+                      <span className="text-sm font-semibold text-black">{product.rating.toFixed(1)}</span>
+                    </div>
+                  )}
+                  {product.originalPrice && (
+                    <div className="bg-black px-3 py-1.5 rounded-full">
+                      <span className="text-sm font-semibold text-white">
+                        Save {formatCurrency(product.originalPrice - product.price)}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex items-baseline space-x-4">
+                  <span className="text-4xl font-bold text-black">{formatCurrency(product.price)}</span>
+                  {product.originalPrice && (
+                    <span className="text-2xl text-gray-400 line-through">{formatCurrency(product.originalPrice)}</span>
+                  )}
+                </div>
               </div>
 
-              <div className="flex items-center space-x-3">
-                <span className="text-3xl font-bold text-gray-900">{formatCurrency(product.price)}</span>
-                {product.originalPrice && (
-                  <span className="text-xl text-gray-500 line-through">{formatCurrency(product.originalPrice)}</span>
-                )}
-                {product.originalPrice && (
-                  <div className="text-green-600 font-medium">
-                    Save {formatCurrency(product.originalPrice - product.price)}
-                  </div>
-                )}
-              </div>
-
               <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-3">Size</h3>
-                <div className="grid grid-cols-3 gap-2">
+                <h3 className="text-lg font-semibold text-black mb-4">Select Size</h3>
+                <div className="grid grid-cols-4 gap-3">
                   {product.sizes && product.sizes.map((sizeObj) => (
                     <button
                       key={`${productId}-size-${sizeObj.size}`}
                       onClick={() => setSelectedSize(sizeObj.size)}
                       disabled={sizeObj.stock === 0}
-                      className={`py-3 px-4 border rounded-lg text-center font-medium transition-colors ${
+                      className={`relative py-4 px-4 border-2 rounded-xl text-center font-medium transition-all duration-200 ${
                         selectedSize === sizeObj.size
-                          ? 'border-blue-500 bg-blue-50 text-blue-700'
+                          ? 'border-black bg-black text-white'
                           : sizeObj.stock === 0
-                          ? 'border-gray-200 text-gray-400 bg-gray-100 cursor-not-allowed'
-                          : 'border-gray-300 hover:border-gray-400'
+                          ? 'border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed'
+                          : 'border-gray-200 hover:border-black hover:bg-gray-50'
                       }`}
                     >
                       <div>
-                        <div>{sizeObj.size}</div>
+                        <div className="text-lg">{sizeObj.size}</div>
                         {sizeObj.stock === 0 ? (
-                          <div className="text-xs text-red-500">Out of Stock</div>
+                          <div className="text-xs text-red-500 mt-1">Out of Stock</div>
                         ) : (
-                          <div className="text-xs text-gray-600">{sizeObj.stock} left</div>
+                          <div className="text-xs text-gray-500 mt-1">{sizeObj.stock} left</div>
                         )}
                       </div>
                     </button>
@@ -181,26 +218,26 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onClose, o
               </div>
 
               <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-3">Quantity</h3>
+                <h3 className="text-lg font-semibold text-black mb-4">Quantity</h3>
                 <div className="flex items-center space-x-4">
                   <button
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
                     disabled={!selectedSize || getSelectedSizeStock() < 2}
-                    className="p-2 border rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="p-3 border-2 rounded-xl hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:border-black"
                   >
                     -
                   </button>
-                  <span className="text-lg font-medium">{quantity}</span>
+                  <span className="text-xl font-semibold w-8 text-center">{quantity}</span>
                   <button
                     onClick={() => setQuantity(quantity + 1)}
                     disabled={!selectedSize || quantity >= getSelectedSizeStock()}
-                    className="p-2 border rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="p-3 border-2 rounded-xl hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:border-black"
                   >
                     +
                   </button>
                 </div>
                 {selectedSize && (
-                  <p className="text-sm text-gray-600 mt-2">
+                  <p className="text-sm text-gray-600 mt-3">
                     {getSelectedSizeStock()} items available in size {selectedSize}
                   </p>
                 )}
@@ -210,10 +247,10 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onClose, o
                 <button
                   onClick={handleAddToCart}
                   disabled={!hasAvailableStock() || !selectedSize || quantity > getSelectedSizeStock()}
-                  className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full bg-black text-white py-5 px-6 rounded-xl font-semibold hover:bg-gray-900 transition-all duration-200 flex items-center justify-center space-x-3 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <ShoppingCart className="h-5 w-5" />
-                  <span>
+                  <ShoppingCart className="h-6 w-6" />
+                  <span className="text-lg">
                     {!hasAvailableStock() 
                       ? 'Out of Stock' 
                       : !selectedSize 
@@ -226,22 +263,24 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onClose, o
                 </button>
               </div>
 
-              <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-3">Description</h3>
-                <p className="text-gray-700 leading-relaxed">{product.description}</p>
+              <div className="border-t border-gray-100 pt-8">
+                <h3 className="text-lg font-semibold text-black mb-4">Description</h3>
+                <p className="text-gray-600 leading-relaxed text-lg">{product.description}</p>
               </div>
 
-              <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-3">Features</h3>
-                <ul className="space-y-2">
-                  {(product.features || []).map((feature, index) => (
-                    <li key={`${productId}-feature-${index}`} className="flex items-center text-gray-700">
-                      <span className="w-2 h-2 bg-blue-600 rounded-full mr-3"></span>
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              {product.features && product.features.length > 0 && (
+                <div className="border-t border-gray-100 pt-8">
+                  <h3 className="text-lg font-semibold text-black mb-4">Features</h3>
+                  <ul className="space-y-3">
+                    {product.features.map((feature, index) => (
+                      <li key={`${productId}-feature-${index}`} className="flex items-center text-gray-600 text-lg">
+                        <span className="w-2 h-2 bg-black rounded-full mr-4"></span>
+                        {feature}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           </div>
         </div>
