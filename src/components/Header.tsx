@@ -1,15 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ShoppingCart, Search, User, Menu, X, Settings } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
 import { useAdmin } from '../contexts/AdminContext';
 import { useQuery } from '@tanstack/react-query';
-import { brandsAPI } from '../services/api';
-import { Brand } from '../types';
+import { brandsAPI, productsAPI } from '../services/api';
+import { Brand, Product } from '../types';
 import AuthModal from './AuthModal';
 import CartSidebar from './CartSidebar';
 import AnnouncementBar from './AnnouncementBar';
+import { useDebounce } from '../hooks/useDebounce';
 
 interface HeaderProps {
   onSearch: (query: string) => void;
@@ -37,10 +38,21 @@ const Header: React.FC<HeaderProps> = ({
   const [showCart, setShowCart] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
   const { data: brands = [], isLoading: brandsLoading } = useQuery<Brand[]>({
     queryKey: ['brands'],
     queryFn: () => brandsAPI.getAllBrands()
+  });
+
+  const { data: searchSuggestions = [], isLoading: suggestionsLoading } = useQuery<Product[]>({
+    queryKey: ['searchSuggestions', debouncedSearchQuery],
+    queryFn: () => {
+      if (debouncedSearchQuery.length < 2) return Promise.resolve([]);
+      return productsAPI.getAllProducts({ search: debouncedSearchQuery, limit: 5 });
+    },
+    enabled: debouncedSearchQuery.length >= 2
   });
 
   // Prevent body scroll when mobile menu is open
@@ -59,20 +71,43 @@ const Header: React.FC<HeaderProps> = ({
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSearch(searchQuery);
-    if (setShowMobileSearch) {
-      setShowMobileSearch(false);
+    if (searchQuery.trim()) {
+      onSearch(searchQuery.trim());
+      setShowSuggestions(false);
+      if (setShowMobileSearch) {
+        setShowMobileSearch(false);
+      }
+      // Navigate to search results page
+      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
     }
   };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
+    const value = e.target.value;
+    setSearchQuery(value);
+    setShowSuggestions(value.length >= 2);
+  };
+
+  const handleSuggestionClick = (product: Product) => {
+    setSearchQuery(product.name);
+    onSearch(product.name);
+    setShowSuggestions(false);
+    if (setShowMobileSearch) {
+      setShowMobileSearch(false);
+    }
+    // Navigate to search results page
+    navigate(`/search?q=${encodeURIComponent(product.name)}`);
   };
 
   const handleSearchClick = () => {
-    onSearch(searchQuery);
-    if (setShowMobileSearch) {
-      setShowMobileSearch(false);
+    if (searchQuery.trim()) {
+      onSearch(searchQuery.trim());
+      setShowSuggestions(false);
+      if (setShowMobileSearch) {
+        setShowMobileSearch(false);
+      }
+      // Navigate to search results page
+      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
     }
   };
 
@@ -103,6 +138,19 @@ const Header: React.FC<HeaderProps> = ({
     }
   };
 
+  // Close suggestions when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.search-container')) {
+        setShowSuggestions(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   return (
     <>
       <header className="bg-white shadow-lg sticky top-0 z-50 border-b border-gray-100">
@@ -126,15 +174,16 @@ const Header: React.FC<HeaderProps> = ({
 
             {/* Desktop Search Bar */}
             <form onSubmit={handleSearchSubmit} className="hidden lg:flex items-center flex-1 max-w-xl mx-8">
-              <div className="relative w-full flex items-center">
+              <div className="relative w-full flex items-center search-container">
                 <div className="relative flex-1">
-                <input
-                  type="text"
-                  placeholder="Search for shoes, brands, categories..."
-                  value={searchQuery}
-                  onChange={handleSearchChange}
+                  <input
+                    type="text"
+                    placeholder="Search for shoes, brands, categories..."
+                    value={searchQuery}
+                    onChange={handleSearchChange}
+                    onFocus={() => searchQuery.length >= 2 && setShowSuggestions(true)}
                     className="w-full pl-12 pr-4 py-3.5 border-2 border-gray-200 rounded-full focus:ring-2 focus:ring-black focus:border-black transition-all duration-200 bg-white shadow-sm hover:shadow-md focus:shadow-lg"
-                />
+                  />
                   <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                 </div>
                 <button
@@ -144,6 +193,37 @@ const Header: React.FC<HeaderProps> = ({
                 >
                   Search
                 </button>
+
+                {/* Search Suggestions */}
+                {showSuggestions && searchQuery.length >= 2 && (
+                  <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg shadow-xl border border-gray-200 max-h-96 overflow-y-auto z-50">
+                    {suggestionsLoading ? (
+                      <div className="p-4 text-center text-gray-500">Loading suggestions...</div>
+                    ) : searchSuggestions.length > 0 ? (
+                      <div className="py-2">
+                        {searchSuggestions.map((product) => (
+                          <button
+                            key={product._id}
+                            onClick={() => handleSuggestionClick(product)}
+                            className="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center space-x-3"
+                          >
+                            <img
+                              src={product.images[0]}
+                              alt={product.name}
+                              className="w-12 h-12 object-cover rounded"
+                            />
+                            <div>
+                              <div className="font-medium text-gray-900">{product.name}</div>
+                              <div className="text-sm text-gray-500">₹{product.price.toLocaleString()}</div>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="p-4 text-center text-gray-500">No results found</div>
+                    )}
+                  </div>
+                )}
               </div>
             </form>
 
@@ -250,27 +330,59 @@ const Header: React.FC<HeaderProps> = ({
 
           {/* Mobile Search */}
           {showMobileSearch && (
-          <form onSubmit={handleSearchSubmit} className="lg:hidden py-4 border-t border-gray-100">
-            <div className="relative w-full flex items-center">
-              <div className="relative flex-1">
-              <input
-                type="text"
-                placeholder="Search for shoes..."
-                value={searchQuery}
-                onChange={handleSearchChange}
-                  className="w-full pl-12 pr-4 py-3.5 border-2 border-gray-200 rounded-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white shadow-sm hover:shadow-md focus:shadow-lg"
-              />
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <form onSubmit={handleSearchSubmit} className="lg:hidden py-4 border-t border-gray-100">
+              <div className="relative w-full flex items-center search-container">
+                <div className="relative flex-1">
+                  <input
+                    type="text"
+                    placeholder="Search for shoes..."
+                    value={searchQuery}
+                    onChange={handleSearchChange}
+                    onFocus={() => searchQuery.length >= 2 && setShowSuggestions(true)}
+                    className="w-full pl-12 pr-4 py-3.5 border-2 border-gray-200 rounded-full focus:ring-2 focus:ring-black focus:border-black transition-all duration-200 bg-white shadow-sm hover:shadow-md focus:shadow-lg"
+                  />
+                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                </div>
+                <button
+                  type="submit"
+                  onClick={handleSearchClick}
+                  className="ml-3 bg-black text-white px-5 py-3.5 rounded-full hover:bg-gray-800 transition-all duration-200 text-sm font-semibold shadow-md hover:shadow-lg transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2"
+                >
+                  Search
+                </button>
+
+                {/* Mobile Search Suggestions */}
+                {showSuggestions && searchQuery.length >= 2 && (
+                  <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg shadow-xl border border-gray-200 max-h-96 overflow-y-auto z-50">
+                    {suggestionsLoading ? (
+                      <div className="p-4 text-center text-gray-500">Loading suggestions...</div>
+                    ) : searchSuggestions.length > 0 ? (
+                      <div className="py-2">
+                        {searchSuggestions.map((product) => (
+                          <button
+                            key={product._id}
+                            onClick={() => handleSuggestionClick(product)}
+                            className="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center space-x-3"
+                          >
+                            <img
+                              src={product.images[0]}
+                              alt={product.name}
+                              className="w-12 h-12 object-cover rounded"
+                            />
+                            <div>
+                              <div className="font-medium text-gray-900">{product.name}</div>
+                              <div className="text-sm text-gray-500">₹{product.price.toLocaleString()}</div>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="p-4 text-center text-gray-500">No results found</div>
+                    )}
+                  </div>
+                )}
               </div>
-              <button
-                type="submit"
-                onClick={handleSearchClick}
-                className="ml-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-5 py-3.5 rounded-full hover:from-blue-700 hover:to-blue-800 transition-all duration-200 text-sm font-semibold shadow-md hover:shadow-lg transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-              >
-                Search
-              </button>
-            </div>
-          </form>
+            </form>
           )}
         </div>
 

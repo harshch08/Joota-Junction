@@ -3,8 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { productsAPI } from '../services/api';
 import { Product } from '../types';
-import { useCart } from '../context/CartContext';
-import { useAuth } from '../context/AuthContext';
+import { useCart } from '../contexts/CartContext';
+import { useAuth } from '../contexts/AuthContext';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage } from '../components/ui/breadcrumb';
 import { ChevronRight, Home, ShoppingCart } from 'lucide-react';
 import { Button } from '../components/ui/button';
@@ -32,24 +32,24 @@ const ProductDetails: React.FC = () => {
       return;
     }
     if (product) {
-      addToCart(product);
+      addToCart({
+        id: product._id || product.id || '',
+        name: product.name,
+        price: product.price,
+        image: product.images[0],
+        size: selectedSize,
+        brand: product.brand
+      });
       toast.success('Added to cart');
     }
   };
 
   if (isLoading) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="animate-pulse">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="aspect-square bg-gray-200 rounded-lg"></div>
-            <div className="space-y-4">
-              <div className="h-8 bg-gray-200 rounded w-3/4"></div>
-              <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-              <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-              <div className="h-32 bg-gray-200 rounded"></div>
-            </div>
-          </div>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading product details...</p>
         </div>
       </div>
     );
@@ -57,10 +57,15 @@ const ProductDetails: React.FC = () => {
 
   if (error || !product) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900">Product not found</h1>
-          <p className="text-gray-500 mt-2">The product you're looking for doesn't exist.</p>
+          <p className="text-red-600 mb-4">Error loading product details. Please try again.</p>
+          <button
+            onClick={() => navigate('/')}
+            className="bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition-colors"
+          >
+            Back to Homepage
+          </button>
         </div>
       </div>
     );
@@ -80,7 +85,7 @@ const ProductDetails: React.FC = () => {
             <ChevronRight className="h-4 w-4" />
           </BreadcrumbItem>
           <BreadcrumbItem>
-            <BreadcrumbLink href={`/brand/${product.brand}`}>
+            <BreadcrumbLink href={`/brand-products/${encodeURIComponent(product.brand)}`}>
               {product.brand}
             </BreadcrumbLink>
           </BreadcrumbItem>

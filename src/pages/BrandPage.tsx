@@ -76,23 +76,23 @@ const BrandPage: React.FC = () => {
   });
 
   const { data: products = [], isLoading: productsLoading, error: productsError } = useQuery<Product[]>({
-    queryKey: ['products', brandSlug, sortBy],
+    queryKey: ['products', brand?.name, sortBy],
     queryFn: async () => {
-      if (!brandSlug) {
-        console.log('No brand slug available, returning empty products array');
+      if (!brand?.name) {
+        console.log('No brand name available, returning empty products array');
         return [];
       }
-      console.log('Fetching products for brand slug:', brandSlug);
+      console.log('Fetching products for brand:', brand.name);
       try {
-        const products = await productsAPI.getAllProducts({ brandSlug });
+        const products = await productsAPI.getAllProducts({ brand: brand.name });
         console.log('Products fetched successfully:', products);
         return products;
       } catch (error) {
-        console.error('Error fetching products for brand slug:', brandSlug, error);
+        console.error('Error fetching products for brand:', brand.name, error);
         throw error;
       }
     },
-    enabled: !!brandSlug,
+    enabled: !!brand?.name,
     staleTime: 5 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
     retry: 2,

@@ -29,6 +29,7 @@ import CartSidebar from './components/CartSidebar';
 import ProtectedAdminRoute from './components/ProtectedAdminRoute';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import Footer from './components/Footer';
+import SearchPage from './pages/SearchPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -93,6 +94,7 @@ const AppContent = () => {
           <Routes>
             {/* Public Routes */}
             <Route path="/" element={<Index />} />
+            <Route path="/search" element={<SearchPage />} />
             <Route path="/category/:category" element={<CategoryPage />} />
             <Route path="/brands" element={<BrandsPage />} />
             <Route path="/brand/:brandSlug" element={<BrandPage />} />

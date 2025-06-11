@@ -89,24 +89,36 @@ export const storeSettingsAPI = {
   }
 };
 
+export interface ProductQueryOptions {
+  brand?: string;
+  brandSlug?: string;
+  category?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  search?: string;
+  limit?: number;
+}
+
 // Products API
 export const productsAPI = {
-  getAllProducts: async (params: { brand?: string; brandSlug?: string; category?: string; minPrice?: number; maxPrice?: number } = {}): Promise<Product[]> => {
+  getAllProducts: async (params?: { 
+    category?: string; 
+    brand?: string;
+    minPrice?: number;
+    maxPrice?: number;
+    sortBy?: string;
+    search?: string;
+  }): Promise<Product[]> => {
     try {
-      // If brandSlug is provided, use the brand-specific endpoint
-      if (params.brandSlug) {
-        console.log('Fetching products for brand slug:', params.brandSlug);
-        const response = await api.get(`/brands/${params.brandSlug}/products`);
-        return response.data;
-      }
-      // If brand name is provided, use it as a filter
-      if (params.brand) {
-        console.log('Fetching products for brand:', params.brand);
-        const response = await api.get('/products', { params: { brand: params.brand } });
-        return response.data;
-      }
-      // Otherwise use the general products endpoint
-      const response = await api.get('/products', { params });
+      const queryParams = new URLSearchParams();
+      if (params?.category) queryParams.append('category', params.category);
+      if (params?.brand) queryParams.append('brand', params.brand);
+      if (params?.minPrice) queryParams.append('minPrice', params.minPrice.toString());
+      if (params?.maxPrice) queryParams.append('maxPrice', params.maxPrice.toString());
+      if (params?.sortBy) queryParams.append('sortBy', params.sortBy);
+      if (params?.search) queryParams.append('search', params.search);
+
+      const response = await axios.get(`${API_URL}/products?${queryParams.toString()}`);
       return response.data;
     } catch (error) {
       console.error('Error fetching products:', error);
