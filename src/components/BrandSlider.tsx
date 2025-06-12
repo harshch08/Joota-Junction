@@ -11,7 +11,7 @@ const brandLogos = {
   'Puma': '/images/logo/puma.png',
   'Adidas': '/images/logo/adidas.png',
   'New Balance': '/images/logo/new-balance.png',
-  'Louis Vuitton': '/images/logo/louis-vuitton.png',
+  'Louis Vuitton': '/images/logo/Louis-Vuitton.png',
   'Skechers': '/images/logo/skechers.png',
   'Crocs': '/images/logo/crocs.png',
   'Asics': '/images/logo/asics.png',
