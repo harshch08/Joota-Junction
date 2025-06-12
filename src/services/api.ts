@@ -2,7 +2,7 @@ import axios from 'axios';
 import { Product, Brand } from '../types';
 
 // Force API URL to use port 5001
-const API_URL = 'http://localhost:5001/api';
+const API_URL = 'https://joota-junction-backend.onrender.com/api';
 
 // Log the final API URL for debugging
 console.log('Using API URL:', API_URL);
