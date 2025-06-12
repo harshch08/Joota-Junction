@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ShoppingCart, Search, User, Menu, X, Settings } from 'lucide-react';
+import { ShoppingCart, Search, User, Menu, X, Settings, LogOut, Package } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
 import { useAdmin } from '../contexts/AdminContext';
@@ -11,6 +11,7 @@ import AuthModal from './AuthModal';
 import CartSidebar from './CartSidebar';
 import AnnouncementBar from './AnnouncementBar';
 import { useDebounce } from '../hooks/useDebounce';
+import { toast } from 'sonner';
 
 interface HeaderProps {
   onSearch: (query: string) => void;
@@ -50,7 +51,7 @@ const Header: React.FC<HeaderProps> = ({
     queryKey: ['searchSuggestions', debouncedSearchQuery],
     queryFn: () => {
       if (debouncedSearchQuery.length < 2) return Promise.resolve([]);
-      return productsAPI.getAllProducts({ search: debouncedSearchQuery, limit: 5 });
+      return productsAPI.getAllProducts({ search: debouncedSearchQuery });
     },
     enabled: debouncedSearchQuery.length >= 2
   });
@@ -120,7 +121,10 @@ const Header: React.FC<HeaderProps> = ({
   };
 
   const handleBrandClick = (brandId: string) => {
-    navigate(`/brand/${brandId}`);
+    const brand = brands.find(b => b._id === brandId);
+    if (brand) {
+      navigate(`/brand-products/${brand.name}`);
+    }
     setShowMobileMenu(false);
   };
 
@@ -243,20 +247,25 @@ const Header: React.FC<HeaderProps> = ({
               {/* User Menu */}
               {user ? (
                 <div className="relative group">
-                  <button className="flex items-center space-x-2 text-gray-700 hover:text-black transition-colors p-2">
-                    <span className="font-medium">{user.name}</span>
-                  </button>
+                  <div className="flex items-center" title={user.name}>
+                    <User className="h-6 w-6 text-gray-700" />
+                  </div>
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100 py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                    <div className="px-4 py-2 border-b border-gray-100 text-center">
+                      <span className="font-medium text-gray-900">{user.name}</span>
+                    </div>
                     <button
                       onClick={() => navigate('/orders')}
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 w-full text-left transition-colors"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 w-full text-left transition-colors flex items-center"
                     >
+                      <Package className="h-4 w-4 mr-2" />
                       My Orders
                     </button>
                     <button
                       onClick={logout}
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 w-full text-left transition-colors"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 w-full text-left transition-colors flex items-center"
                     >
+                      <LogOut className="h-4 w-4 mr-2" />
                       Sign out
                     </button>
                   </div>
@@ -415,27 +424,32 @@ const Header: React.FC<HeaderProps> = ({
               {user ? (
                 <div className="flex items-center space-x-3 pb-4 border-b border-gray-100">
                   <div className="flex-1">
-                    <p className="font-medium text-gray-900">{user.name}</p>
-                        <div className="flex space-x-4 mt-2">
-                          <button
-                            onClick={() => {
-                              navigate('/orders');
-                              setShowMobileMenu(false);
-                            }}
-                            className="text-sm text-blue-600 hover:text-blue-700"
-                          >
-                            My Orders
-                          </button>
-                    <button
-                      onClick={() => {
-                        logout();
-                        setShowMobileMenu(false);
-                      }}
-                      className="text-sm text-red-600 hover:text-red-700"
-                    >
-                      Sign out
-                    </button>
-                        </div>
+                    <div className="flex flex-col items-center justify-center text-center" title={user.name}>
+                      <User className="h-6 w-6 text-gray-700" />
+                      <span className="mt-1 font-medium text-gray-900">{user.name}</span>
+                    </div>
+                    <div className="flex flex-col mt-2">
+                      <button
+                        onClick={() => {
+                          navigate('/orders');
+                          setShowMobileMenu(false);
+                        }}
+                        className="w-full text-left text-sm text-black hover:text-gray-700 flex items-center px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors"
+                      >
+                        <Package className="h-4 w-4 mr-2" />
+                        My Orders
+                      </button>
+                      <button
+                        onClick={() => {
+                          logout();
+                          setShowMobileMenu(false);
+                        }}
+                        className="w-full text-left text-sm text-black hover:text-gray-700 flex items-center px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors"
+                      >
+                        <LogOut className="h-4 w-4 mr-2" />
+                        Sign out
+                      </button>
+                    </div>
                   </div>
                 </div>
               ) : (
@@ -474,7 +488,7 @@ const Header: React.FC<HeaderProps> = ({
                   <button
                         key={brand._id}
                         onClick={() => handleBrandClick(brand._id)}
-                        className="block w-full text-left py-3 px-4 rounded-lg text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50 transition-colors"
+                        className="block w-full text-left py-3 px-4 rounded-lg text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50 transition-colors border-b border-gray-100"
                   >
                         {brand.name}
                   </button>

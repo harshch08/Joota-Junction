@@ -14,7 +14,8 @@ const brandLogos = {
   'Louis Vuitton': '/images/logo/louis-vuitton.png',
   'Skechers': '/images/logo/skechers.png',
   'Crocs': '/images/logo/crocs.png',
-  'Asics': '/images/logo/asics.png'
+  'Asics': '/images/logo/asics.png',
+  'Reebok': '/images/logo/reebok.png'
 };
 
 const BrandSlider: React.FC = () => {
@@ -44,17 +45,10 @@ const BrandSlider: React.FC = () => {
   }
 
   return (
-    <ScrollSection className="w-full bg-white py-16">
+    <div className="brand-slider w-full bg-white py-8 overflow-hidden" style={{border: 'none', boxShadow: 'none'}}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
-          <h2 className="text-4xl font-bold text-gray-900 mb-4 relative inline-block">
-            Our Brands
-            <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-indigo-600 to-violet-600 rounded-full"></div>
-          </h2>
-          <p className="text-gray-600 mt-4 max-w-2xl mx-auto">Experience excellence with our carefully selected lineup of premium footwear brands.</p>
-        </div>
-        <div className="relative overflow-hidden">
-          <div className="flex animate-marquee whitespace-nowrap">
+        <div className="infinite-scroll-container">
+          <div className="infinite-scroll-content">
             {[...brands, ...brands].map((brand, index) => (
               <div
                 key={`${brand._id}-${index}`}
@@ -71,7 +65,7 @@ const BrandSlider: React.FC = () => {
           </div>
         </div>
       </div>
-    </ScrollSection>
+    </div>
   );
 };
 

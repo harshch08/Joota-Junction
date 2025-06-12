@@ -52,7 +52,7 @@ const NewArrivals: React.FC<NewArrivalsProps> = ({ onProductClick, onAuthRequire
         <div className="text-center mb-12">
           <h2 className="text-4xl font-bold text-gray-900 mb-4 relative inline-block">
             New Arrivals
-            <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-pink-500 to-purple-500 rounded-full"></div>
+            <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-black rounded-full"></div>
           </h2>
           <p className="text-gray-600 mt-4 max-w-2xl mx-auto">Discover our latest additions to the collection, featuring the newest styles and trends.</p>
         </div>

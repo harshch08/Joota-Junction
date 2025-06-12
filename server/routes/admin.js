@@ -7,46 +7,75 @@ const User = require('../models/User');
 const Product = require('../models/Product');
 const Order = require('../models/Order');
 const Category = require('../models/Category');
+const Brand = require('../models/Brand');
 const StoreSettings = require('../models/StoreSettings');
 
 // Admin Dashboard Statistics
 router.get('/dashboard', adminProtect, async (req, res) => {
   try {
+    console.log('Fetching dashboard data for admin:', req.user.email);
+
     const totalUsers = await User.countDocuments({ role: 'user' });
+    console.log('Total users:', totalUsers);
+
     const totalProducts = await Product.countDocuments();
+    console.log('Total products:', totalProducts);
+
     const totalOrders = await Order.countDocuments();
+    console.log('Total orders:', totalOrders);
+
     const pendingOrders = await Order.countDocuments({ status: 'pending' });
+    console.log('Pending orders:', pendingOrders);
     
     const totalRevenue = await Order.aggregate([
       { $match: { status: { $in: ['delivered', 'shipped'] } } },
       { $group: { _id: null, total: { $sum: '$totalPrice' } } }
     ]);
+    console.log('Total revenue:', totalRevenue[0]?.total || 0);
 
     const recentOrders = await Order.find()
       .populate('user', 'name email')
       .populate('items.product', 'name price')
       .sort({ createdAt: -1 })
       .limit(5);
+    console.log('Recent orders count:', recentOrders.length);
 
     // Get low stock products (any size with stock < 10)
     const lowStockProducts = await Product.find({
       'sizes.stock': { $lt: 10 }
     });
+    console.log('Low stock products count:', lowStockProducts.length);
 
-    res.json({
+    // Get all brands
+    const brands = await Brand.find().sort({ name: 1 });
+    console.log('Total brands:', brands.length);
+
+    const dashboardData = {
       stats: {
         totalUsers,
         totalProducts,
         totalOrders,
         pendingOrders,
-        totalRevenue: totalRevenue[0]?.total || 0
+        totalRevenue: totalRevenue[0]?.total || 0,
+        totalBrands: brands.length
       },
       recentOrders,
-      lowStockProducts
-    });
+      lowStockProducts,
+      brands
+    };
+
+    console.log('Dashboard data fetched successfully');
+    res.json(dashboardData);
   } catch (error) {
-    console.error('Dashboard error:', error);
-    res.status(500).json({ message: 'Error fetching dashboard data' });
+    console.error('Dashboard error:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
+    res.status(500).json({ 
+      message: 'Error fetching dashboard data',
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+    });
   }
 });
 
@@ -736,6 +765,214 @@ router.put('/change-password', adminProtect, async (req, res) => {
   } catch (error) {
     console.error('Change password error:', error);
     res.status(500).json({ message: 'Error changing password' });
+  }
+});
+
+// Brand Management Routes
+
+// Get all brands with pagination
+router.get('/brands', adminProtect, async (req, res) => {
+  try {
+    console.log('=== Fetching brands ===');
+    console.log('Admin user:', req.user.email);
+    
+    // First check if Brand model is properly imported
+    if (!Brand) {
+      console.error('Brand model is not properly imported');
+      return res.status(500).json({ message: 'Server configuration error' });
+    }
+
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    // Get all brands without any filters first to debug
+    const allBrands = await Brand.find({});
+    console.log('All brands in database:', allBrands);
+
+    // Get active brands with pagination
+    const brands = await Brand.find({ isActive: true })
+      .sort({ name: 1 })
+      .skip(skip)
+      .limit(limit);
+
+    console.log(`Found ${brands.length} brands after pagination`);
+
+    const total = await Brand.countDocuments({ isActive: true });
+    console.log(`Total active brands: ${total}`);
+
+    // If no brands found, create some default brands
+    if (total === 0) {
+      console.log('No brands found, creating default brands...');
+      const defaultBrands = [
+        { name: 'Nike', description: 'Just Do It', logo: 'https://via.placeholder.com/150' },
+        { name: 'Adidas', description: 'Impossible Is Nothing', logo: 'https://via.placeholder.com/150' },
+        { name: 'Puma', description: 'Forever Faster', logo: 'https://via.placeholder.com/150' },
+        { name: 'Reebok', description: 'Be More Human', logo: 'https://via.placeholder.com/150' }
+      ];
+
+      try {
+        const createdBrands = await Brand.insertMany(defaultBrands);
+        console.log('Created default brands:', createdBrands);
+        brands = createdBrands;
+        total = createdBrands.length;
+      } catch (insertError) {
+        console.error('Error creating default brands:', insertError);
+        return res.status(500).json({ 
+          message: 'Error creating default brands',
+          error: process.env.NODE_ENV === 'development' ? insertError.message : undefined
+        });
+      }
+    }
+
+    const response = {
+      brands,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(total / limit),
+        totalBrands: total,
+        hasNext: page * limit < total,
+        hasPrev: page > 1
+      }
+    };
+
+    console.log('Sending brands response:', JSON.stringify(response, null, 2));
+    res.json(response);
+  } catch (error) {
+    console.error('Error in GET /brands:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
+    res.status(500).json({ 
+      message: 'Error fetching brands',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+// Get brand by ID
+router.get('/brands/:id', adminProtect, async (req, res) => {
+  try {
+    const brand = await Brand.findById(req.params.id);
+    if (!brand) {
+      return res.status(404).json({ message: 'Brand not found' });
+    }
+    res.json(brand);
+  } catch (error) {
+    console.error('Get brand error:', error);
+    res.status(500).json({ message: 'Error fetching brand' });
+  }
+});
+
+// Create new brand
+router.post('/brands', adminProtect, async (req, res) => {
+  try {
+    const { name, description, logo } = req.body;
+    
+    // Validate required fields
+    if (!name || name.trim().length === 0) {
+      return res.status(400).json({ message: 'Brand name is required' });
+    }
+
+    // Check if brand already exists (case-insensitive)
+    const existingBrand = await Brand.findOne({ 
+      name: { $regex: new RegExp(`^${name.trim()}$`, 'i') } 
+    });
+    
+    if (existingBrand) {
+      return res.status(400).json({ 
+        message: 'Brand with this name already exists' 
+      });
+    }
+
+    const brand = await Brand.create({
+      name: name.trim(),
+      description: description?.trim(),
+      logo: logo || 'https://via.placeholder.com/150'
+    });
+
+    res.status(201).json(brand);
+  } catch (error) {
+    console.error('Create brand error:', error);
+    res.status(500).json({ 
+      message: 'Error creating brand',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+// Update brand
+router.put('/brands/:id', adminProtect, async (req, res) => {
+  try {
+    const { name, description, logo, isActive } = req.body;
+    
+    const brand = await Brand.findById(req.params.id);
+    
+    if (!brand) {
+      return res.status(404).json({ message: 'Brand not found' });
+    }
+    
+    // Check if name is being changed and if it conflicts with existing brand
+    if (name && name.trim() !== brand.name) {
+      const existingBrand = await Brand.findOne({ 
+        name: { $regex: new RegExp(`^${name.trim()}$`, 'i') },
+        _id: { $ne: req.params.id }
+      });
+      
+      if (existingBrand) {
+        return res.status(400).json({ 
+          message: 'Brand with this name already exists' 
+        });
+      }
+    }
+    
+    // Update fields
+    if (name !== undefined) brand.name = name.trim();
+    if (description !== undefined) brand.description = description?.trim();
+    if (logo !== undefined) brand.logo = logo;
+    if (isActive !== undefined) brand.isActive = isActive;
+    
+    await brand.save();
+    
+    res.json(brand);
+  } catch (error) {
+    console.error('Update brand error:', error);
+    res.status(500).json({ 
+      message: 'Error updating brand',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+// Delete brand (soft delete)
+router.delete('/brands/:id', adminProtect, async (req, res) => {
+  try {
+    const brand = await Brand.findById(req.params.id);
+    
+    if (!brand) {
+      return res.status(404).json({ message: 'Brand not found' });
+    }
+
+    // Check if brand is used in any products
+    const productsWithBrand = await Product.findOne({ brand: brand.name });
+    if (productsWithBrand) {
+      return res.status(400).json({ 
+        message: 'Cannot delete brand that is associated with products' 
+      });
+    }
+    
+    // Soft delete by setting isActive to false
+    brand.isActive = false;
+    await brand.save();
+    
+    res.json({ message: 'Brand deleted successfully' });
+  } catch (error) {
+    console.error('Delete brand error:', error);
+    res.status(500).json({ 
+      message: 'Error deleting brand',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 });
 

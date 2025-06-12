@@ -33,8 +33,12 @@ const BottomNav: React.FC<BottomNavProps> = ({ onSearchClick, showSearch, onAuth
   };
 
   const handleCartClick = () => {
-    if (onCartClick) {
-      onCartClick();
+    if (user) {
+      if (onCartClick) {
+        onCartClick();
+      }
+    } else if (onAuthClick) {
+      onAuthClick();
     }
   };
 
@@ -95,12 +99,13 @@ const BottomNav: React.FC<BottomNavProps> = ({ onSearchClick, showSearch, onAuth
       icon: ShoppingCart,
       matchPath: (path: string) => false,
       onClick: handleCartClick,
+      showBadge: true,
       key: 'cart'
     },
   ];
 
   return (
-    <div className="fixed bottom-6 left-0 right-0 flex justify-center md:hidden z-50 px-4">
+    <div className="fixed bottom-6 left-0 right-0 flex justify-center md:hidden z-40 px-4">
       <motion.nav
         initial={{ y: 100 }}
         animate={{ y: 0 }}
@@ -132,8 +137,8 @@ const BottomNav: React.FC<BottomNavProps> = ({ onSearchClick, showSearch, onAuth
                     isActive ? 'text-white scale-110' : 'text-gray-400'
                   }`} />
                   
-                  {/* Cart Badge */}
-                  {item.path === '#' && cartItemsCount > 0 && (
+                  {/* Cart Badge - Only show on cart icon */}
+                  {item.showBadge && cartItemsCount > 0 && (
                     <motion.div
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}

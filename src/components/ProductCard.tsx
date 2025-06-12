@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ShoppingCart, Heart, Star } from 'lucide-react';
+import { ShoppingCart, Heart } from 'lucide-react';
 import { Product } from '../types';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -102,14 +102,6 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onProductClick, onAu
           </div>
         )}
 
-        {/* Rating Badge */}
-        {product.rating && (
-          <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm text-black px-2 py-1 rounded-full text-xs font-semibold flex items-center gap-1 shadow-sm">
-            <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-            {product.rating.toFixed(1)}
-          </div>
-        )}
-
         {/* Out of Stock Overlay */}
         {!hasAvailableStock() && (
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center">
@@ -142,14 +134,14 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onProductClick, onAu
       <div className="p-4">
         <div className="mb-2">
           <p className="text-sm text-gray-500 font-medium mb-1">{product.brand}</p>
-          <h3 className="font-bold text-gray-900 group-hover:text-black transition-colors line-clamp-2">
+          <h3 className="text-sm font-semibold text-gray-900 group-hover:text-black transition-colors truncate">
             {product.name}
           </h3>
         </div>
 
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <span className="text-lg font-bold text-black">{formatIndianCurrency(product.price)}</span>
+            <span style={{ fontWeight: 500, fontSize: '15px' }} className="text-black">{formatIndianCurrency(product.price)}</span>
             {product.originalPrice && (
               <span className="text-sm text-gray-400 line-through">{formatIndianCurrency(product.originalPrice)}</span>
             )}

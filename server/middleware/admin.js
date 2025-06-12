@@ -9,7 +9,10 @@ const adminProtect = async (req, res, next) => {
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id).select('-password');
+    console.log('Decoded token:', decoded); // Debug log
+
+    const user = await User.findById(decoded.userId).select('-password');
+    console.log('Found user:', user); // Debug log
     
     if (!user) {
       return res.status(401).json({ message: 'Not authorized, user not found' });
@@ -23,6 +26,7 @@ const adminProtect = async (req, res, next) => {
     req.user = user;
     next();
   } catch (error) {
+    console.error('Admin middleware error:', error);
     res.status(401).json({ message: 'Not authorized, token failed' });
   }
 };

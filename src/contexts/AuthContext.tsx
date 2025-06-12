@@ -1,21 +1,25 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useGoogleLogin } from '@react-oauth/google';
+import axios from 'axios';
 
 interface User {
   _id: string;
   name: string;
   email: string;
   role: 'user' | 'admin';
+  avatar?: string;
 }
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
   error: string | null;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<User>;
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => void;
   clearAllAuth: () => void;
+  loginWithGoogle: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -92,6 +96,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Regular user stays on the current page or goes to home
         navigate('/', { replace: true });
       }
+
+      return userData;
     } catch (error: any) {
       setError(error.message || 'Login failed');
       throw error;
@@ -140,6 +146,57 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(null);
   };
 
+  const loginWithGoogle = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      try {
+        setError(null);
+        console.log('Google login successful, token:', tokenResponse);
+        
+        // Get user info from Google
+        const userInfo = await axios.get(
+          'https://www.googleapis.com/oauth2/v3/userinfo',
+          {
+            headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
+          }
+        );
+        console.log('User info from Google:', userInfo.data);
+
+        // Send to your backend
+        const response = await fetch('http://localhost:5001/api/auth/google', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            token: tokenResponse.access_token,
+            userInfo: userInfo.data
+          }),
+        });
+
+        const data = await response.json();
+        console.log('Backend response:', data);
+
+        if (!response.ok) {
+          throw new Error(data.message || 'Google authentication failed');
+        }
+
+        const { token, user: userData } = data;
+        localStorage.setItem('token', token);
+        setUser(userData);
+        navigate('/', { replace: true });
+      } catch (error: any) {
+        console.error('Google auth error:', error);
+        setError(error.message || 'Google authentication failed');
+      }
+    },
+    onError: (error) => {
+      console.error('Google login error:', error);
+      setError('Google authentication failed');
+    },
+    flow: 'implicit',
+    scope: 'email profile'
+  });
+
   return (
     <AuthContext.Provider
       value={{
@@ -150,6 +207,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         register,
         logout,
         clearAllAuth,
+        loginWithGoogle,
       }}
     >
       {children}

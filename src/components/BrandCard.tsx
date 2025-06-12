@@ -21,10 +21,12 @@ const brandLogos = {
 
 // Brand to background color mapping
 const brandColors = {
-  'Nike': '#FF6B6B', // Coral Red
-  'Puma': '#4ECDC4', // Turquoise
-  'Adidas': '#45B7D1', // Sky Blue
-  'New Balance': '#96CEB4' // Sage Green
+  'Nike': '#FFE066',        // modern light yellow
+  'Puma': '#FFB74D',       // modern light orange
+  'Adidas': '#40C4FF',     // light blue
+  'New Balance': '#69F0AE',// modern light green
+  'Yeezy': '#1DE9B6',      // turquoise
+  'Jordan': '#FFE066'      // modern light yellow (as example)
 };
 
 interface BrandCardProps {
@@ -43,10 +45,12 @@ const BrandCard: React.FC<BrandCardProps> = ({ brand }) => {
   return (
     <div
       onClick={handleClick}
-      className="group relative rounded-xl overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-2xl hover:scale-[1.02]"
+      className="group relative rounded-xl overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-2xl hover:scale-[1.02] flex sm:flex-row flex-col items-center justify-center p-2 sm:p-3"
       style={{ 
-        aspectRatio: '2.5/1',
-        backgroundColor: brandColors[brand.name as keyof typeof brandColors] || '#ffffff'
+        aspectRatio: '2/1',
+        backgroundColor: brandColors[brand.name as keyof typeof brandColors] || '#ffffff',
+        minHeight: '90px',
+        maxHeight: '110px',
       }}
     >
       {/* Background Pattern */}
@@ -59,35 +63,28 @@ const BrandCard: React.FC<BrandCardProps> = ({ brand }) => {
 
       {/* Content */}
       <div className="relative h-full flex items-center p-4 sm:p-6">
-        {/* Left side - Brand Logo */}
-        <div className="w-1/3 flex items-center justify-center">
+        {/* Brand Logo (top on mobile, left on desktop) */}
+        <div className="sm:w-1/3 w-full flex items-center justify-center" style={brand.name === 'Adidas' ? { marginRight: '1.5rem' } : {}}>
           <img
             src={brandLogos[brand.name as keyof typeof brandLogos]}
             alt={`${brand.name} logo`}
-            className="h-16 sm:h-20 object-contain"
+            className="object-contain"
+            style={{
+              height: brand.name === 'Adidas' ? '4.2rem' : '5rem',
+              maxHeight: brand.name === 'Adidas' ? '4.2rem' : '5rem',
+              maxWidth: brand.name === 'Adidas' ? '80%' : '90%'
+            }}
           />
         </div>
 
-        {/* Right side - Shoe Image */}
-        <div className="w-2/3 h-full flex items-center justify-end">
+        {/* Shoe Image (bottom on mobile, right on desktop) */}
+        <div className="sm:w-2/3 w-full flex items-center justify-center">
           <img
             src={brandShoeImages[brand.name as keyof typeof brandShoeImages]}
             alt={`${brand.name} shoe`}
-            className="h-[120%] sm:h-[140%] object-contain transform transition-transform duration-500 group-hover:scale-110"
-            style={{ marginRight: '-10%' }}
+            className="h-20 sm:h-[170%] object-contain transform transition-transform duration-500 group-hover:scale-110"
+            style={{ maxWidth: '95%' }}
           />
-        </div>
-
-        {/* Brand Info Overlay */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 bg-gradient-to-t from-black/80 via-black/30 to-transparent">
-          <div className="flex flex-col items-start">
-            <div className="opacity-0 transform translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
-              <button className="inline-flex items-center space-x-2 bg-white/10 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-white/20 transition-all duration-300">
-                <span>Explore Collection</span>
-                <ArrowRight className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" />
-              </button>
-            </div>
-          </div>
         </div>
       </div>
 

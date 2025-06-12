@@ -328,15 +328,21 @@ const AdminDashboard: React.FC = () => {
   const fetchBrands = async () => {
     try {
       const token = localStorage.getItem('adminToken');
-      const response = await fetch('http://localhost:5001/api/brands/admin/all', {
+      if (!token) {
+        console.error('No admin token found');
+        return;
+      }
+
+      const response = await fetch('http://localhost:5001/api/admin/brands', {
         headers: {
           'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         },
       });
 
       if (response.ok) {
         const data = await response.json();
-        setBrands(data);
+        setBrands(data.brands || data); // Handle both paginated and non-paginated responses
       } else {
         const error = await response.json();
         console.error('Error fetching brands:', error.message);

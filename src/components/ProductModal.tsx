@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, ShoppingCart, Star, ChevronLeft, ChevronRight } from 'lucide-react';
+import { X, ShoppingCart, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Product } from '../types';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -165,12 +165,6 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onClose, o
             <div className="space-y-8">
               <div>
                 <div className="flex items-center space-x-3 mb-4">
-                  {product.rating && (
-                    <div className="flex items-center space-x-1.5 bg-gray-100 px-3 py-1.5 rounded-full">
-                      <Star className="h-4 w-4 fill-black text-black" />
-                      <span className="text-sm font-semibold text-black">{product.rating.toFixed(1)}</span>
-                    </div>
-                  )}
                   {product.originalPrice && (
                     <div className="bg-black px-3 py-1.5 rounded-full">
                       <span className="text-sm font-semibold text-white">

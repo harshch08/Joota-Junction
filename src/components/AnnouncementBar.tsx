@@ -1,20 +1,41 @@
 import React from 'react';
+import { Info, AlertCircle, Bell } from 'lucide-react';
 
 const AnnouncementBar: React.FC = () => {
   const announcements = [
-    "Pay ₹200 advance for cash on delivery orders!",
-    "Our team will contact you for order confirmation!"
+    { text: "₹200 Advance for Cash On Delivery", icon: <Info className="h-4 w-4 mr-2" /> },
+    { text: "Our Team will contact you for order confirmation", icon: <AlertCircle className="h-4 w-4 mr-2" /> },
+    { text: "New Collection Available", icon: <Bell className="h-4 w-4 mr-2" /> },
+    { text: "₹200 Advance for Cash On Delivery", icon: <Info className="h-4 w-4 mr-2" /> },
+    { text: "Our Team will contact you for order confirmation", icon: <AlertCircle className="h-4 w-4 mr-2" /> },
+    { text: "New Collection Available", icon: <Bell className="h-4 w-4 mr-2" /> }
   ];
 
   return (
-    <div className="w-full bg-black text-white py-2 overflow-hidden">
-      <div className="animate-marquee whitespace-nowrap inline-block">
-        {[...Array(6)].map((_, index) => (
-          <span key={index} className="inline-block">
-            <span className="mx-4">{announcements[index % 2]}</span>
-            <span className="mx-4">•</span>
-          </span>
-        ))}
+    <div className="bg-black text-white py-2 overflow-hidden">
+      <div className="announcement-bar">
+        <div className="announcement-content">
+          {announcements.map((announcement, index) => (
+            <div
+              key={index}
+              className="whitespace-nowrap px-6 flex-shrink-0 flex items-center"
+            >
+              {announcement.icon}
+              {announcement.text}
+            </div>
+          ))}
+        </div>
+        <div className="announcement-content" aria-hidden="true">
+          {announcements.map((announcement, index) => (
+            <div
+              key={`duplicate-${index}`}
+              className="whitespace-nowrap px-6 flex-shrink-0 flex items-center"
+            >
+              {announcement.icon}
+              {announcement.text}
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

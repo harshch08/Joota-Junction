@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -12,6 +14,87 @@
   body {
     padding-bottom: 4rem;
   }
+}
+
+/* Infinite scroll animation */
+@keyframes scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-scroll {
+  animation: scroll 20s linear infinite;
+}
+
+.animate-scroll:hover {
+  animation-play-state: paused;
+}
+
+/* Container for infinite scroll */
+.infinite-scroll-container {
+  display: flex;
+  overflow: hidden;
+  width: 100%;
+  position: relative;
+}
+
+.infinite-scroll-content {
+  display: flex;
+  animation: scroll 20s linear infinite;
+}
+
+.infinite-scroll-content:hover {
+  animation-play-state: paused;
+}
+
+/* Duplicate content for seamless loop */
+.infinite-scroll-content > * {
+  flex-shrink: 0;
+}
+
+.infinite-scroll-content::after {
+  content: "";
+  display: block;
+  flex-shrink: 0;
+  width: 1px;
+}
+
+/* Brand slider specific styles */
+.brand-slider {
+  display: flex;
+  overflow: hidden;
+  width: 100%;
+  position: relative;
+}
+
+.brand-content {
+  display: flex;
+  animation: scroll 30s linear infinite;
+}
+
+.brand-content:hover {
+  animation-play-state: paused;
+}
+
+/* Announcement bar specific styles */
+.announcement-bar {
+  display: flex;
+  overflow: hidden;
+  width: 100%;
+  position: relative;
+}
+
+.announcement-content {
+  display: flex;
+  animation: scroll 15s linear infinite;
+}
+
+.announcement-content:hover {
+  animation-play-state: paused;
 }
 
 @layer base {
@@ -93,6 +176,10 @@
     --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: 0 0% 20%;
     --sidebar-ring: 0 0% 100%;
+  }
+
+  html {
+    font-family: 'Poppins', sans-serif;
   }
 }
 

@@ -15,6 +15,7 @@ import Banner from '../components/Banner';
 import BrandSlider from '../components/BrandSlider';
 import ScrollSection from '../components/ScrollSection';
 import NewArrivals from '../components/NewArrivals';
+import { useNavigate } from 'react-router-dom';
 
 const priceRanges = [
   { label: 'Under ₹2,000', min: 0, max: 2000 },
@@ -37,6 +38,7 @@ const Index = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
 
   const { data: products = [], isLoading, error } = useQuery({
     queryKey: ['products', searchQuery, selectedCategory, selectedBrand, selectedPriceRange],
@@ -70,7 +72,7 @@ const Index = () => {
   const { data: brands = [], isLoading: brandsLoading } = useQuery<Brand[]>({
     queryKey: ['brands'],
     queryFn: () => brandsAPI.getAllBrands()
-    });
+  });
 
   // Filter brands to show only specific ones
   const filteredBrands = useMemo(() => {
@@ -185,17 +187,25 @@ const Index = () => {
           <div className="text-center mb-8 md:mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 relative inline-block">
               Shop by Brand
-              <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full"></div>
+              <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-black rounded-full"></div>
             </h2>
             <p className="text-gray-600 mt-4 max-w-2xl mx-auto text-base md:text-lg">Discover our curated collection of premium brands, each bringing their unique style and quality to your wardrobe.</p>
           </div>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
             {filteredBrands.map((brand) => (
               <BrandCard
                 key={brand._id}
                 brand={brand}
               />
             ))}
+          </div>
+          <div className="flex justify-end mt-8">
+            <button
+              onClick={() => navigate('/brands')}
+              className="inline-flex items-center px-6 py-3 border border-black text-base font-medium rounded-md shadow-sm text-black bg-white hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black"
+            >
+              View All Brands
+            </button>
           </div>
         </div>
       </ScrollSection>
@@ -206,7 +216,7 @@ const Index = () => {
           <div className="text-center mb-8 md:mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 relative inline-block">
               Featured Products
-              <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-orange-500 to-yellow-500 rounded-full"></div>
+              <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-black rounded-full"></div>
             </h2>
             <p className="text-gray-600 mt-4 max-w-2xl mx-auto text-base md:text-lg">Explore our handpicked selection of trending styles and must-have pieces for your collection.</p>
           </div>
@@ -229,7 +239,15 @@ const Index = () => {
 
       {/* Brand Slider Section */}
       <ScrollSection id="brand-slider" className="py-12 bg-gray-50">
-      <BrandSlider />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-8 md:mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 relative inline-block">
+              Our Brands
+              <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-black rounded-full"></div>
+            </h2>
+          </div>
+          <BrandSlider />
+        </div>
       </ScrollSection>
 
       <ScrollSection id="new-arrivals" className="py-12 bg-white">
@@ -247,7 +265,7 @@ const Index = () => {
           <div className="text-center mb-8 md:mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 relative inline-block">
               All Products
-              <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full"></div>
+              <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-black rounded-full"></div>
             </h2>
             <p className="text-gray-600 mt-4 max-w-2xl mx-auto text-base md:text-lg">Browse our complete collection of premium footwear, from classic styles to the latest trends.</p>
           </div>

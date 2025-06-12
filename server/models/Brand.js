@@ -3,64 +3,68 @@ const mongoose = require('mongoose');
 const brandSchema = new mongoose.Schema({
   name: {
     type: String,
-    required: true,
+    required: [true, 'Brand name is required'],
     unique: true,
-    trim: true
-  },
-  slug: {
-    type: String,
-    unique: true,
-    lowercase: true,
-    sparse: true
+    trim: true,
+    minlength: [2, 'Brand name must be at least 2 characters long']
   },
   description: {
     type: String,
+    trim: true,
     default: ''
   },
   logo: {
     type: String,
-    default: ''
-  },
-  bgColor: {
-    type: String,
-    default: '#f3f4f6' // fallback gray
+    default: 'https://via.placeholder.com/150'
   },
   isActive: {
     type: Boolean,
     default: true
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now
-  },
-  updatedAt: {
-    type: Date,
-    default: Date.now
   }
+}, {
+  timestamps: true
 });
 
-// Update the updatedAt field before saving
+// Add index for faster queries
+brandSchema.index({ name: 1 });
+
+// Add method to check if brand exists
+brandSchema.statics.findByName = async function(name) {
+  return this.findOne({ name: { $regex: new RegExp(`^${name}$`, 'i') } });
+};
+
+// Add method to get all active brands
+brandSchema.statics.getActiveBrands = async function() {
+  return this.find({ isActive: true }).sort({ name: 1 });
+};
+
+// Add pre-save middleware to ensure name is trimmed
 brandSchema.pre('save', function(next) {
-  this.updatedAt = Date.now();
+  if (this.isModified('name')) {
+    this.name = this.name.trim();
+  }
   next();
 });
 
-// Generate slug from name
-brandSchema.pre('save', function(next) {
-  if (this.isModified('name') || !this.slug) {
-    this.slug = this.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-  }
-  next();
-});
+const Brand = mongoose.model('Brand', brandSchema);
 
-// Generate slug for insertMany operations
-brandSchema.pre('insertMany', function(next, docs) {
-  docs.forEach(doc => {
-    if (!doc.slug) {
-      doc.slug = doc.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+// Create default brands if none exist
+Brand.createDefaultBrands = async function() {
+  try {
+    const count = await this.countDocuments();
+    if (count === 0) {
+      const defaultBrands = [
+        { name: 'Nike', description: 'Just Do It', logo: 'https://via.placeholder.com/150' },
+        { name: 'Adidas', description: 'Impossible Is Nothing', logo: 'https://via.placeholder.com/150' },
+        { name: 'Puma', description: 'Forever Faster', logo: 'https://via.placeholder.com/150' },
+        { name: 'Reebok', description: 'Be More Human', logo: 'https://via.placeholder.com/150' }
+      ];
+      await this.insertMany(defaultBrands);
+      console.log('Default brands created successfully');
     }
-  });
-  next();
-});
+  } catch (error) {
+    console.error('Error creating default brands:', error);
+  }
+};
 
-module.exports = mongoose.model('Brand', brandSchema); 
+module.exports = Brand; 

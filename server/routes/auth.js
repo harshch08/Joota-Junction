@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken');
 const { OAuth2Client } = require('google-auth-library');
 const User = require('../models/User');
 const { protect } = require('../middleware/auth');
+const { generateOtp, verifyOtpAndRegister, login } = require('../controllers/authController');
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -69,50 +70,7 @@ router.post('/register', async (req, res) => {
 });
 
 // Login user
-router.post('/login', async (req, res) => {
-  try {
-    const { email, password } = req.body;
-
-    // Validate input
-    if (!email || !password) {
-      return res.status(400).json({ message: 'Please provide email and password' });
-    }
-
-    // Find user
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(401).json({ message: 'Invalid email or password' });
-    }
-
-    // Check password
-    const isMatch = await user.comparePassword(password);
-    if (!isMatch) {
-      return res.status(401).json({ message: 'Invalid email or password' });
-    }
-
-    // Generate token
-    const token = jwt.sign(
-      { id: user._id },
-      process.env.JWT_SECRET,
-      { expiresIn: '7d' }
-    );
-
-    res.json({
-      token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        avatar: user.avatar,
-        cart: user.cart
-      }
-    });
-  } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({ message: 'Error logging in' });
-  }
-});
+router.post('/login', login);
 
 // Get user profile
 router.get('/profile', protect, async (req, res) => {
@@ -233,5 +191,11 @@ router.delete('/cart', protect, async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
+
+// Generate OTP
+router.post('/generate-otp', generateOtp);
+
+// Verify OTP and register
+router.post('/verify-otp', verifyOtpAndRegister);
 
 module.exports = router; 

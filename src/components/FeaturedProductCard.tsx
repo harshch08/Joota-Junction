@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ShoppingCart, Star, Heart, TrendingUp } from 'lucide-react';
+import { ShoppingCart, Heart, TrendingUp } from 'lucide-react';
 import { Product } from '../types';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -106,14 +106,6 @@ const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({ product, onPr
         {product.originalPrice && (
           <div className="absolute top-3 right-3 bg-black text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
             Sale
-          </div>
-        )}
-
-        {/* Rating Badge */}
-        {product.rating && (
-          <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm text-black px-2 py-1 rounded-full text-xs font-semibold flex items-center gap-1 shadow-sm">
-            <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-            {product.rating.toFixed(1)}
           </div>
         )}
 

@@ -193,7 +193,7 @@ const Footer: React.FC<FooterProps> = ({ className = '' }) => {
       {/* Go to Top Button */}
       <button
         onClick={scrollToTop}
-        className={`fixed bottom-20 md:bottom-6 right-6 p-3 rounded-full bg-white hover:bg-gray-100 text-gray-900 shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-300 group z-50 ${
+        className={`fixed bottom-20 md:bottom-6 right-6 p-3 rounded-full bg-white hover:bg-gray-100 text-gray-900 shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-300 group z-40 ${
           showScrollTop 
             ? 'opacity-100 translate-y-0' 
             : 'opacity-0 translate-y-10 pointer-events-none'

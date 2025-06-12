@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, CreditCard, Truck, Shield, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useCart } from '../context/CartContext';
-import { useAuth } from '../context/AuthContext';
+import { useCart } from '../contexts/CartContext';
+import { useAuth } from '../contexts/AuthContext';
 import { formatCurrency } from '../lib/utils';
 import { ordersAPI } from '../services/api';
 
@@ -200,8 +200,8 @@ const Checkout = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen bg-gray-50 overflow-x-hidden">
+      <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 py-8 w-full">
         <button
           onClick={() => navigate('/')}
           className="flex items-center text-blue-600 hover:text-blue-700 mb-8"
@@ -217,9 +217,9 @@ const Checkout = () => {
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 w-full">
           {/* Order Form */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-lg shadow p-4 sm:p-6 w-full max-w-full overflow-x-auto">
             <h1 className="text-2xl font-bold text-gray-900 mb-6">Checkout</h1>
             
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -387,19 +387,19 @@ const Checkout = () => {
           </div>
 
           {/* Order Summary */}
-          <div className="bg-white rounded-lg shadow p-6 h-fit">
+          <div className="bg-white rounded-lg shadow p-4 sm:p-6 h-fit w-full max-w-full overflow-x-auto">
             <h2 className="text-xl font-bold text-gray-900 mb-6">Order Summary</h2>
             
             <div className="space-y-4 mb-6">
               {items.map((item) => (
-                <div key={`${item.id}-${item.size}`} className="flex items-center space-x-4 bg-gray-50 p-4 rounded-lg">
+                <div key={`${item.id}-${item.size}`} className="flex items-center space-x-2 sm:space-x-4 bg-gray-50 p-2 sm:p-4 rounded-lg w-full overflow-x-auto">
                   <img
                     src={item.image}
                     alt={item.name}
-                    className="w-20 h-20 object-cover rounded"
+                    className="w-16 h-16 sm:w-20 sm:h-20 object-cover rounded"
                   />
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-medium text-gray-900 truncate">{item.name}</h3>
+                    <h3 className="font-medium text-gray-900 truncate break-words max-w-full">{item.name}</h3>
                     <p className="text-sm text-gray-600">Size: {item.size}</p>
                     <p className="text-sm text-gray-600">Qty: {item.quantity || 1}</p>
                     <p className="text-sm font-medium text-gray-900 mt-1">
