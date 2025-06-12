@@ -3,6 +3,13 @@ const router = express.Router();
 const Order = require('../models/Order');
 const Product = require('../models/Product');
 const { protect } = require('../middleware/auth');
+const Razorpay = require('razorpay');
+
+// Razorpay instance (keys from environment variables)
+const razorpay = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID,
+  key_secret: process.env.RAZORPAY_KEY_SECRET,
+});
 
 // Get user's orders
 router.get('/', protect, async (req, res) => {
@@ -188,6 +195,22 @@ router.put('/:id/status', protect, async (req, res) => {
       message: 'Error updating order status',
       error: error.message 
     });
+  }
+});
+
+// Create Razorpay order endpoint
+router.post('/create-razorpay-order', async (req, res) => {
+  const { amount, currency = 'INR', receipt } = req.body;
+  try {
+    const options = {
+      amount: Math.round(amount * 100), // amount in paise
+      currency,
+      receipt: receipt || `order_rcptid_${Date.now()}`,
+    };
+    const order = await razorpay.orders.create(options);
+    res.json(order);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 

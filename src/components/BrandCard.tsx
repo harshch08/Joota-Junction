@@ -45,12 +45,10 @@ const BrandCard: React.FC<BrandCardProps> = ({ brand }) => {
   return (
     <div
       onClick={handleClick}
-      className="group relative rounded-xl overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-2xl hover:scale-[1.02] flex sm:flex-row flex-col items-center justify-center p-2 sm:p-3"
+      className="group relative rounded-xl overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-2xl hover:scale-[1.02] flex sm:flex-row flex-col items-center justify-center w-full h-full p-4 sm:p-6"
       style={{ 
         aspectRatio: '2/1',
         backgroundColor: brandColors[brand.name as keyof typeof brandColors] || '#ffffff',
-        minHeight: '90px',
-        maxHeight: '110px',
       }}
     >
       {/* Background Pattern */}

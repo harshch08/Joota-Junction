@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, CreditCard, Truck, Shield, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
@@ -26,6 +26,7 @@ const Checkout = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formErrors, setFormErrors] = useState<FormErrors>({});
+  const [paymentMethod, setPaymentMethod] = useState<'razorpay' | 'cod'>('razorpay');
   
   useEffect(() => {
     if (!user) {
@@ -176,6 +177,141 @@ const Checkout = () => {
       console.error('Error processing order:', err);
       setError('An error occurred while processing your order. Please try again.');
       setIsProcessing(false);
+    }
+  };
+
+  const loadRazorpayScript = () => {
+    return new Promise((resolve) => {
+      if (document.getElementById('razorpay-script')) return resolve(true);
+      const script = document.createElement('script');
+      script.id = 'razorpay-script';
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
+  const handleRazorpayPayment = async (codMode = false) => {
+    setError(null);
+    if (!validateForm()) return;
+    setIsProcessing(true);
+    console.log('Starting Razorpay payment flow...');
+    const scriptLoaded = await loadRazorpayScript();
+    console.log('Razorpay script loaded:', scriptLoaded);
+    const payAmount = codMode ? 200 : total;
+    if (!scriptLoaded) {
+      setError('Failed to load Razorpay SDK.');
+      setIsProcessing(false);
+      return;
+    }
+    const razorpayKey = import.meta.env.VITE_RAZORPAY_KEY_ID;
+    console.log('Razorpay Key:', razorpayKey);
+    if (!razorpayKey) {
+      setError('Razorpay Key is missing in environment variables.');
+      setIsProcessing(false);
+      return;
+    }
+    try {
+      // 1. Create Razorpay order on backend
+      const res = await fetch('http://localhost:5001/api/orders/create-razorpay-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount: payAmount, currency: 'INR' }),
+      });
+      const order = await res.json();
+      console.log('Backend Razorpay order response:', order);
+      if (!order.id) throw new Error('Failed to create Razorpay order');
+
+      // 2. Open Razorpay checkout
+      const options = {
+        key: razorpayKey,
+        amount: order.amount,
+        currency: order.currency,
+        name: 'Joota Junction',
+        description: codMode ? 'COD Order Confirmation' : 'Order Payment',
+        order_id: order.id,
+        handler: async function (response: any) {
+          await handleSubmitRazorpayOrder(response, codMode);
+        },
+        prefill: {
+          name: `${formData.firstName} ${formData.lastName}`,
+          email: formData.email,
+          contact: formData.phone,
+        },
+        theme: { color: '#3399cc' },
+        modal: {
+          ondismiss: () => {
+            navigate('/order-fail');
+          }
+        }
+      };
+      if (!(window as any).Razorpay) {
+        setError('Razorpay SDK not loaded.');
+        setIsProcessing(false);
+        return;
+      }
+      const rzp = new (window as any).Razorpay(options);
+      rzp.open();
+      setIsProcessing(false);
+    } catch (err: any) {
+      setError(err.message || 'Razorpay payment failed.');
+      setIsProcessing(false);
+      console.error('Razorpay payment error:', err);
+    }
+  };
+
+  const handleSubmitRazorpayOrder = async (razorpayResponse: any, codMode = false) => {
+    try {
+      // Prepare order data for API (same as before, but with payment info)
+      const orderData = {
+        items: items.map(item => ({
+          product: item.id,
+          size: parseInt(item.size),
+          quantity: item.quantity || 1,
+          price: item.price
+        })),
+        shippingAddress: {
+          street: formData.address,
+          city: formData.city,
+          state: formData.state,
+          zipCode: formData.zipCode,
+          country: formData.country
+        },
+        paymentMethod: codMode ? 'cod' : 'razorpay',
+        totalPrice: total + SHIPPING_COST,
+        shippingPrice: SHIPPING_COST,
+        amountPaid: codMode ? 200 : total + SHIPPING_COST,
+        amountDue: codMode ? (total + SHIPPING_COST - 200) : 0,
+        razorpayPaymentId: razorpayResponse.razorpay_payment_id,
+        razorpayOrderId: razorpayResponse.razorpay_order_id,
+        razorpaySignature: razorpayResponse.razorpay_signature,
+      };
+      const response = await fetch('http://localhost:5001/api/orders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify(orderData)
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        setError(errorData.message || 'Failed to create order after payment.');
+        return;
+      }
+      const createdOrder = await response.json();
+      await clearCart();
+      navigate('/order-success', { 
+        state: { 
+          orderId: createdOrder._id, 
+          total: createdOrder.totalPrice,
+          customerName: `${formData.firstName} ${formData.lastName}`,
+        } 
+      });
+    } catch (err) {
+      setError('Order creation failed after payment.');
+      navigate('/order-fail');
     }
   };
 
@@ -358,31 +494,69 @@ const Checkout = () => {
               {/* Payment Method */}
               <div>
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">Payment Method</h2>
-                <div className="border border-gray-300 rounded-lg p-4">
-                  <div className="flex items-center space-x-3">
-                    <CreditCard className="h-6 w-6 text-gray-600" />
-                    <span className="font-medium">Credit/Debit Card</span>
-                  </div>
-                  <p className="text-sm text-gray-600 mt-2">
-                    Payment will be processed securely
-                  </p>
+                <div className="flex flex-col gap-4">
+                  <label className={`flex items-center p-4 rounded-lg border-2 transition-all cursor-pointer ${paymentMethod === 'cod' ? 'border-black bg-gray-50 shadow' : 'border-gray-300 bg-white'}`}>
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="cod"
+                      checked={paymentMethod === 'cod'}
+                      onChange={() => setPaymentMethod('cod')}
+                      className="accent-black mr-3"
+                    />
+                    <Truck className="h-6 w-6 text-gray-600 mr-3" />
+                    <span className="font-medium">Cash on Delivery</span>
+                    <span className="ml-2 text-sm text-gray-500">(Pay ₹200 now, rest on delivery)</span>
+                  </label>
+                  <label className={`flex items-center p-4 rounded-lg border-2 transition-all cursor-pointer ${paymentMethod === 'razorpay' ? 'border-black bg-gray-50 shadow' : 'border-gray-300 bg-white'}`}>
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="razorpay"
+                      checked={paymentMethod === 'razorpay'}
+                      onChange={() => setPaymentMethod('razorpay')}
+                      className="accent-black mr-3"
+                    />
+                    <CreditCard className="h-6 w-6 text-gray-600 mr-3" />
+                    <span className="font-medium">Online Payment</span>
+                    <span className="ml-2 text-sm text-gray-500">(Card/UPI/Net Banking - Full Payment)</span>
+                  </label>
                 </div>
               </div>
 
-              <button
-                type="submit"
-                disabled={isProcessing}
-                className="w-full bg-blue-600 text-white py-4 rounded-lg font-semibold text-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isProcessing ? (
-                  <div className="flex items-center justify-center">
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                    Processing...
-                  </div>
-                ) : (
-                  `Pay ${formatCurrency(total + SHIPPING_COST)}`
-                )}
-              </button>
+              {paymentMethod === 'cod' ? (
+                <button
+                  type="button"
+                  onClick={() => handleRazorpayPayment(true)}
+                  className="w-full bg-black text-white py-4 rounded-lg font-semibold text-lg hover:bg-gray-900 transition-colors mt-4"
+                  disabled={isProcessing}
+                >
+                  {isProcessing ? (
+                    <div className="flex items-center justify-center">
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                      Processing...
+                    </div>
+                  ) : (
+                    `Pay ₹200 to Confirm Order`
+                  )}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => handleRazorpayPayment(false)}
+                  className="w-full bg-black text-white py-4 rounded-lg font-semibold text-lg hover:bg-gray-900 transition-colors mt-4"
+                  disabled={isProcessing}
+                >
+                  {isProcessing ? (
+                    <div className="flex items-center justify-center">
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                      Processing...
+                    </div>
+                  ) : (
+                    `Pay with Razorpay`
+                  )}
+                </button>
+              )}
             </form>
           </div>
 

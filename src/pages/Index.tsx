@@ -191,7 +191,7 @@ const Index = () => {
             </h2>
             <p className="text-gray-600 mt-4 max-w-2xl mx-auto text-base md:text-lg">Discover our curated collection of premium brands, each bringing their unique style and quality to your wardrobe.</p>
           </div>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
             {filteredBrands.map((brand) => (
               <BrandCard
                 key={brand._id}

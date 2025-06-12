@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
 import { Button } from './ui/button';
@@ -23,6 +23,17 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [showOtpVerification, setShowOtpVerification] = useState(false);
   const { login, register, loginWithGoogle } = useAuth();
+
+  useEffect(() => {
+    if (!isOpen) {
+      setShowOtpVerification(false);
+      setIsLogin(true);
+      setEmail('');
+      setPassword('');
+      setName('');
+      setError('');
+    }
+  }, [isOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

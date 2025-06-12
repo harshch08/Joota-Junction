@@ -51,7 +51,7 @@ const orderSchema = new mongoose.Schema({
   paymentMethod: {
     type: String,
     required: true,
-    enum: ['credit_card', 'debit_card', 'upi'],
+    enum: ['razorpay', 'cod'],
   },
   paymentResult: {
     id: String,
@@ -77,6 +77,14 @@ const orderSchema = new mongoose.Schema({
   createdAt: {
     type: Date,
     default: Date.now,
+  },
+  amountPaid: {
+    type: Number,
+    default: 0,
+  },
+  amountDue: {
+    type: Number,
+    default: 0,
   },
 });
 

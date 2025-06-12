@@ -14,6 +14,7 @@ import BrandPage from "./pages/BrandPage";
 import BrandsPage from "./pages/BrandsPage";
 import Checkout from "./pages/Checkout";
 import OrderSuccess from "./pages/OrderSuccess";
+import OrderFail from "./pages/OrderFail";
 import NotFound from "./pages/NotFound";
 import OrdersPage from './pages/OrdersPage';
 import AdminLogin from './pages/AdminLogin';
@@ -101,6 +102,7 @@ const AppContent = () => {
             <Route path="/product/:productId" element={<ProductDetails />} />
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/order-success" element={<OrderSuccess />} />
+            <Route path="/order-fail" element={<OrderFail />} />
             <Route path="/orders" element={<OrdersPage />} />
             <Route path="/brand-products/:brandName" element={<BrandProductsPage />} />
             
