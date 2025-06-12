@@ -62,7 +62,7 @@ const OrdersPage: React.FC = () => {
         navigate('/', { replace: true });
         return;
       }
-      const response = await fetch('http://localhost:5001/api/orders', {
+      const response = await fetch('https://joota-junction-backend-ylhi.onrender.com/api/orders', {
         headers: {
           'Authorization': `Bearer ${token}`,
         },

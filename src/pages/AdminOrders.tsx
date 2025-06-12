@@ -50,7 +50,7 @@ const AdminOrders: React.FC = () => {
   const fetchOrders = async () => {
     try {
       const token = localStorage.getItem('adminToken');
-      const response = await fetch('http://localhost:5001/api/admin/orders', {
+      const response = await fetch('https://joota-junction-backend-ylhi.onrender.com/api/admin/orders', {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -70,7 +70,7 @@ const AdminOrders: React.FC = () => {
   const updateOrderStatus = async (orderId: string, status: string) => {
     try {
       const token = localStorage.getItem('adminToken');
-      const response = await fetch(`http://localhost:5001/api/admin/orders/${orderId}/status`, {
+      const response = await fetch(`https://joota-junction-backend-ylhi.onrender.com/api/admin/orders/${orderId}/status`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,

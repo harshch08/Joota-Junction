@@ -134,7 +134,7 @@ const Checkout = () => {
       };
 
       // Create order in MongoDB via API
-      const response = await fetch('http://localhost:5001/api/orders', {
+      const response = await fetch('https://joota-junction-backend-ylhi.onrender.com/api/orders', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -214,7 +214,7 @@ const Checkout = () => {
     }
     try {
       // 1. Create Razorpay order on backend
-      const res = await fetch('http://localhost:5001/api/orders/create-razorpay-order', {
+      const res = await fetch('https://joota-junction-backend-ylhi.onrender.com/api/orders/create-razorpay-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ amount: payAmount, currency: 'INR' }),
@@ -287,7 +287,7 @@ const Checkout = () => {
         razorpayOrderId: razorpayResponse.razorpay_order_id,
         razorpaySignature: razorpayResponse.razorpay_signature,
       };
-      const response = await fetch('http://localhost:5001/api/orders', {
+      const response = await fetch('https://joota-junction-backend-ylhi.onrender.com/api/orders', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -35,7 +35,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         const token = localStorage.getItem('token');
         if (token) {
-          const response = await fetch('http://localhost:5001/api/auth/profile', {
+          const response = await fetch('https://joota-junction-backend-ylhi.onrender.com/api/auth/profile', {
             headers: {
               'Authorization': `Bearer ${token}`,
             },
@@ -66,7 +66,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password: string) => {
     try {
       setError(null);
-      const response = await fetch('http://localhost:5001/api/auth/login', {
+      const response = await fetch('https://joota-junction-backend-ylhi.onrender.com/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -107,7 +107,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const register = async (name: string, email: string, password: string) => {
     try {
       setError(null);
-      const response = await fetch('http://localhost:5001/api/auth/register', {
+      const response = await fetch('https://joota-junction-backend-ylhi.onrender.com/api/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -162,7 +162,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.log('User info from Google:', userInfo.data);
 
         // Send to your backend
-        const response = await fetch('http://localhost:5001/api/auth/google', {
+        const response = await fetch('https://joota-junction-backend-ylhi.onrender.com/api/auth/google', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

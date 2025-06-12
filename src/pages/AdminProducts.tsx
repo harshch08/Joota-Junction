@@ -38,7 +38,7 @@ const AdminProducts: React.FC = () => {
     try {
       const token = localStorage.getItem('adminToken');
       const response = await fetch(
-        `http://localhost:5001/api/admin/products?page=${currentPage}&limit=10`,
+        `https://joota-junction-backend-ylhi.onrender.com/api/admin/products?page=${currentPage}&limit=10`,
         {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -61,7 +61,7 @@ const AdminProducts: React.FC = () => {
   const handleDeleteProduct = async (productId: string) => {
     try {
       const token = localStorage.getItem('adminToken');
-      const response = await fetch(`http://localhost:5001/api/admin/products/${productId}`, {
+      const response = await fetch(`https://joota-junction-backend-ylhi.onrender.com/api/admin/products/${productId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,

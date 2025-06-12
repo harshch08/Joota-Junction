@@ -27,7 +27,7 @@ const OtpVerification: React.FC<OtpVerificationProps> = ({
     setIsLoading(true);
 
     try {
-      const response = await fetch('http://localhost:5001/api/auth/verify-otp', {
+      const response = await fetch('https://joota-junction-backend-ylhi.onrender.com/api/auth/verify-otp', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

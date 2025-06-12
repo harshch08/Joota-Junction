@@ -287,7 +287,7 @@ const AdminDashboard: React.FC = () => {
   const fetchDashboardData = async () => {
     try {
       const token = localStorage.getItem('adminToken');
-      const response = await fetch('http://localhost:5001/api/admin/dashboard', {
+      const response = await fetch('https://joota-junction-backend-ylhi.onrender.com/api/admin/dashboard', {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -310,7 +310,7 @@ const AdminDashboard: React.FC = () => {
   const fetchProducts = async () => {
     try {
       const token = localStorage.getItem('adminToken');
-      const response = await fetch('http://localhost:5001/api/admin/products', {
+      const response = await fetch('https://joota-junction-backend-ylhi.onrender.com/api/admin/products', {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -333,7 +333,7 @@ const AdminDashboard: React.FC = () => {
         return;
       }
 
-      const response = await fetch('http://localhost:5001/api/admin/brands', {
+      const response = await fetch('https://joota-junction-backend-ylhi.onrender.com/api/admin/brands', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -355,7 +355,7 @@ const AdminDashboard: React.FC = () => {
   const fetchOrders = async () => {
     try {
       const token = localStorage.getItem('adminToken');
-      const response = await fetch('http://localhost:5001/api/admin/orders', {
+      const response = await fetch('https://joota-junction-backend-ylhi.onrender.com/api/admin/orders', {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -373,7 +373,7 @@ const AdminDashboard: React.FC = () => {
   const fetchFeaturedProducts = async () => {
     try {
       const token = localStorage.getItem('adminToken');
-      const response = await fetch('http://localhost:5001/api/admin/featured-products', {
+      const response = await fetch('https://joota-junction-backend-ylhi.onrender.com/api/admin/featured-products', {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -391,7 +391,7 @@ const AdminDashboard: React.FC = () => {
   const fetchAllProductsForFeatured = async () => {
     try {
       const token = localStorage.getItem('adminToken');
-      const response = await fetch('http://localhost:5001/api/admin/products-for-featured', {
+      const response = await fetch('https://joota-junction-backend-ylhi.onrender.com/api/admin/products-for-featured', {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -409,7 +409,7 @@ const AdminDashboard: React.FC = () => {
   const fetchStoreSettings = async () => {
     try {
       const token = localStorage.getItem('adminToken');
-      const response = await fetch('http://localhost:5001/api/admin/store-settings', {
+      const response = await fetch('https://joota-junction-backend-ylhi.onrender.com/api/admin/store-settings', {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -427,7 +427,7 @@ const AdminDashboard: React.FC = () => {
   const handleAddProduct = async () => {
     try {
       const token = localStorage.getItem('adminToken');
-      const response = await fetch('http://localhost:5001/api/admin/products', {
+      const response = await fetch('https://joota-junction-backend-ylhi.onrender.com/api/admin/products', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -489,7 +489,7 @@ const AdminDashboard: React.FC = () => {
         }));
       }
       
-      const response = await fetch(`http://localhost:5001/api/admin/products/${editingProduct._id}`, {
+      const response = await fetch(`https://joota-junction-backend-ylhi.onrender.com/api/admin/products/${editingProduct._id}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -553,7 +553,7 @@ const AdminDashboard: React.FC = () => {
   const handleDeleteProduct = async (productId: string) => {
     try {
       const token = localStorage.getItem('adminToken');
-      const response = await fetch(`http://localhost:5001/api/admin/products/${productId}`, {
+      const response = await fetch(`https://joota-junction-backend-ylhi.onrender.com/api/admin/products/${productId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -571,7 +571,7 @@ const AdminDashboard: React.FC = () => {
   const handleUpdateInventory = async (productId: string, size: number, stock: number) => {
     try {
       const token = localStorage.getItem('adminToken');
-      const response = await fetch(`http://localhost:5001/api/admin/products/${productId}/inventory`, {
+      const response = await fetch(`https://joota-junction-backend-ylhi.onrender.com/api/admin/products/${productId}/inventory`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -614,7 +614,7 @@ const AdminDashboard: React.FC = () => {
   const handleUpdateOrderStatus = async (orderId: string, status: string) => {
     try {
       const token = localStorage.getItem('adminToken');
-      const response = await fetch(`http://localhost:5001/api/admin/orders/${orderId}/status`, {
+      const response = await fetch(`https://joota-junction-backend-ylhi.onrender.com/api/admin/orders/${orderId}/status`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -677,7 +677,7 @@ const AdminDashboard: React.FC = () => {
       }
 
       const token = localStorage.getItem('adminToken');
-      const response = await fetch('http://localhost:5001/api/brands', {
+      const response = await fetch('https://joota-junction-backend-ylhi.onrender.com/api/brands', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -722,7 +722,7 @@ const AdminDashboard: React.FC = () => {
       }
 
       const token = localStorage.getItem('adminToken');
-      const response = await fetch(`http://localhost:5001/api/brands/${editingBrand._id}`, {
+      const response = await fetch(`https://joota-junction-backend-ylhi.onrender.com/api/brands/${editingBrand._id}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -777,7 +777,7 @@ const AdminDashboard: React.FC = () => {
 
     try {
       const token = localStorage.getItem('adminToken');
-      const response = await fetch(`http://localhost:5001/api/brands/${brandId}`, {
+      const response = await fetch(`https://joota-junction-backend-ylhi.onrender.com/api/brands/${brandId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -823,7 +823,7 @@ const AdminDashboard: React.FC = () => {
     try {
       setLoadingFeatured(true);
       const token = localStorage.getItem('adminToken');
-      const response = await fetch('http://localhost:5001/api/admin/featured-products/bulk', {
+      const response = await fetch('https://joota-junction-backend-ylhi.onrender.com/api/admin/featured-products/bulk', {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -850,7 +850,7 @@ const AdminDashboard: React.FC = () => {
   const handleRemoveFromFeatured = async (productId: string) => {
     try {
       const token = localStorage.getItem('adminToken');
-      const response = await fetch(`http://localhost:5001/api/admin/products/${productId}/featured`, {
+      const response = await fetch(`https://joota-junction-backend-ylhi.onrender.com/api/admin/products/${productId}/featured`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -875,7 +875,7 @@ const AdminDashboard: React.FC = () => {
       setSettingsMessage('');
       
       const token = localStorage.getItem('adminToken');
-      const response = await fetch('http://localhost:5001/api/admin/store-settings', {
+      const response = await fetch('https://joota-junction-backend-ylhi.onrender.com/api/admin/store-settings', {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,

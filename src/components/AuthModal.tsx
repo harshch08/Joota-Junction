@@ -47,7 +47,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         onClose();
       } else {
         // Generate OTP for registration
-        const response = await fetch('http://localhost:5001/api/auth/generate-otp', {
+        const response = await fetch('https://joota-junction-backend-ylhi.onrender.com/api/auth/generate-otp', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

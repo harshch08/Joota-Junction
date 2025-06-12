@@ -82,7 +82,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     try {
       // Check stock availability before adding to cart
-      const response = await fetch(`http://localhost:5001/api/products/${item.id}`);
+      const response = await fetch(`https://joota-junction-backend-ylhi.onrender.com/api/products/${item.id}`);
       if (response.ok) {
         const product = await response.json();
         const sizeObj = product.sizes?.find((s: any) => s.size === parseInt(item.size));
@@ -148,7 +148,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     try {
       // Check stock availability before updating quantity
-      const response = await fetch(`http://localhost:5001/api/products/${itemId}`);
+      const response = await fetch(`https://joota-junction-backend-ylhi.onrender.com/api/products/${itemId}`);
       if (response.ok) {
         const product = await response.json();
         const sizeObj = product.sizes?.find((s: any) => s.size === parseInt(size));
